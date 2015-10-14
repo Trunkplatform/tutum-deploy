@@ -26,6 +26,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency('rufus-scheduler', '~> 3.1')
   spec.add_dependency('tutum', '~> 0.2')
-  spec.add_dependency "rake"
+  spec.add_dependency("rake", '~>10.4')
   spec.add_dependency('colored', '~> 1.2')
 end
