@@ -1,8 +1,8 @@
 require 'logger'
 require 'tutum'
-require_relative "../../tutum_api"
+require_relative "../../../tutum/tutum_api"
 require 'rufus-scheduler'
-
+require 'colored'
 
 module Trunk
   module TutumDeploy
@@ -18,27 +18,28 @@ module Trunk
         @logger.progname = "Tutum"
       end
 
-      def services(service_name)
+      def get_services(service_name)
         @services = @session.services.list({:name => service_name})[:objects]
       end
 
-      def service(service_name)
-        services = services(service_name)
+      def get_service(service_name)
+        services = get_services(service_name)
         raise "Failure: Multiple services with name: #{service_name}" if services.length > 1
         services[0]
       end
 
       def decide_bluegreen(service_name)
-        services = services(service_name)
+        services = get_services(service_name)
 
+        bluegreen = {}
         services.each { |service|
           if service[:state] == "Stopped"
-            @to_deploy = service
+            bluegreen[:to_deploy] = service
           else
-            @to_shutdown = service
+            bluegreen[:to_shutdown]  = service
           end
         }
-        {:to_deploy => @to_deploy, :to_shutdown => @to_shutdown}
+        bluegreen
       end
 
       def deploy(service, version)
@@ -48,16 +49,18 @@ module Trunk
         @session.services.start(service[:uuid])
       end
 
-      def wait_for_healthy(service_uuid, ping_url, sleep_interval, max_timeout)
+      def wait_for_healthy(service, ping_url, sleep_interval, max_timeout)
         (sleep_interval..max_timeout).step(sleep_interval) do
           if check_heath ping_url
-            return
+            return 0
           else
             @logger.info("waiting for service to start, sleeping for #{sleep_interval}")
           end
         end
-        @logger.error("service #{service_uuid} not started after maximum time out of #{max_timeout}")
-        abort("service #{service_uuid} not started after maximum time out of #{max_timeout}")
+
+        error_msg = "service #{service[:uuid]} not started after maximum time out of #{max_timeout} seconds"
+        @logger.error(error_msg)
+        abort(error_msg)
       end
 
       def check_heath(ping_url)
@@ -65,6 +68,12 @@ module Trunk
         response.code == 200
       end
 
+      def relink_router (router_name, bluegreen_services)
+        to_deploy = bluegreen_services[:to_deploy]
+        to_shutdown = bluegreen_services[:to_shutdown]
+
+        router_service = get_service(router_name)
+      end
     end
   end
 end

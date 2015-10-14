@@ -1,7 +1,7 @@
 require 'rspec'
 require 'webmock/rspec'
 require 'json'
-require 'trunk/tutum_deploy'
+require 'trunk/tutum/deploy/connection'
 
 describe Trunk::TutumDeploy::Connection do
 
@@ -39,7 +39,7 @@ describe Trunk::TutumDeploy::Connection do
       stub_request(:get, "#{TUTUM_API_URL}/service/?name=web-sandbox").to_return(:status => 200, :body => SERVICES_RESPONSE_JSON)
 
       # when
-      services = connection.services("web-sandbox")
+      services = connection.get_services("web-sandbox")
 
       # then
       expect(services).to eq(SERVICES_RESPONSE_HASH[:objects])
@@ -62,27 +62,47 @@ describe Trunk::TutumDeploy::Connection do
 
     it 'should start with updated image' do
       # given
-      @service = SERVICES_RESPONSE_HASH[:objects][1]
-      @deploy_image = "trunk/web-sandbox:v2"
-      @service_uuid = @service[:uuid]
-      @service[:image_name] = @deploy_image
+      service = SERVICES_RESPONSE_HASH[:objects][1]
+      service_uuid = service[:uuid]
+      deploy_image = "trunk/web-sandbox:v2"
 
       stub_request(:get, "#{TUTUM_API_URL}/service/?name=web-sandbox").to_return(:status => 200, :body => SERVICES_RESPONSE_JSON)
-      stub_request(:patch, "#{TUTUM_API_URL}/service/#{@service_uuid}/")
-          .with(:body => "{\"image_name\":\"#{@deploy_image}\"}")
+      stub_request(:patch, "#{TUTUM_API_URL}/service/#{service_uuid}/")
+          .with(:body => "{\"image_name\":\"#{deploy_image}\"}")
           .to_return(:status => 200, :body => "{}")
-      stub_request(:post, "#{TUTUM_API_URL}/service/#{@service_uuid}/start/").to_return(:status => 200, :body => "{}")
+      stub_request(:post, "#{TUTUM_API_URL}/service/#{service_uuid}/start/").to_return(:status => 200, :body => "{}")
 
       # when
-      connection.deploy(@service, "v2")
+      connection.deploy(service, "v2")
 
       # then
-      # expect(@session).to receive(update).with(@service_uuid, :image_name => @deploy_image)
-      # expect(@session).to receive(start).with(@service_uuid)
+      # expect(connection.session).to receive(update).with(@service_uuid, :image_name => @deploy_image)
+      # expect(connection.session).to receive(start).with(@service_uuid)
     end
 
     it 'should wait for healthy service' do
+      # given
+      service = SERVICES_RESPONSE_HASH[:objects][1]
+      stub_request(:get, "ping").to_return(:status => 200, :body => "{}")
 
+      # when
+      result = connection.wait_for_healthy(service, "ping", 5, 10)
+
+      # then
+      expect(result).to be(0)
+    end
+
+    it 'should timeout after max wait' do
+      # given
+      service = SERVICES_RESPONSE_HASH[:objects][1]
+
+      # when
+      begin
+        connection.wait_for_healthy(service, "ping", 5, 1)
+      rescue Exception => ex
+        # then
+        expect(ex.status).to be(1)
+      end
     end
 
     it 'should relink router' do

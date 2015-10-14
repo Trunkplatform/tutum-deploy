@@ -1,15 +1,15 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'trunk/tutum-deploy/version'
+require 'trunk/tutum/deploy/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "tutum-deploy"
   spec.version       = Trunk::TutumDeploy::VERSION
   spec.authors       = ["Yun Zhi Lin"]
   spec.email         = ["yun@yunspace.com"]
-  spec.summary       = "A gem for doing zero downtime deployments in Tutum"
-  spec.description   = "A gem for doing zero downtime deployments in Tutum"
+  spec.summary       = "A gem for Tutum zero downtime deployments using Stacks"
+  spec.description   = "A gem for Tutum zero downtime deployments using Stacks"
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -19,7 +19,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.6"
-  spec.add_development_dependency "rake"
   spec.add_development_dependency('webmock', '~> 1.21')
   spec.add_development_dependency('rspec', '~> 3.3')
   spec.add_development_dependency('pry', '~> 0.9')
@@ -27,4 +26,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency('rufus-scheduler', '~> 3.1')
   spec.add_dependency('tutum', '~> 0.2')
+  spec.add_dependency "rake"
+  spec.add_dependency('colored', '~> 1.2')
 end
