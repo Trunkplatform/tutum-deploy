@@ -15,4 +15,25 @@ namespace :tutum do
       abort ex.message.red
     end
   end
+
+  desc 'Service level Health Check'
+  task :ping_service, [:service_name, :version] do |_, args|
+    begin
+      Trunk::TutumDeploy.(args[:service_name], args[:version])
+    rescue Exception => ex
+      @logger.error ex.backtrace
+      abort ex.message.red
+    end
+  end
+
+  desc 'Service level Health Check'
+  task :ping_service, [:service_name, :stack] do |_, args|
+    begin
+      Trunk::TutumDeploy.(args[:service_name], args[:version])
+    rescue Exception => ex
+      @logger.error ex.backtrace
+      abort ex.message.red
+    end
+  end
+
 end

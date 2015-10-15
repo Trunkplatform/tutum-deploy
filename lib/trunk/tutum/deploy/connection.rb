@@ -15,11 +15,11 @@ module Trunk
 
         @session = Tutum.new(:username => "#{ENV['TUTUM_USERNAME']}", :api_key => "#{ENV['TUTUM_API_KEY']}")
         @logger = Logger.new(STDOUT)
-        @logger.progname = "Tutum"
+        @logger.progname = "Tutum Deploy"
       end
 
       def get_services(service_name)
-        @services = @session.services.list({:name => service_name})[:objects]
+        @session.services.list({:name => service_name})[:objects]
       end
 
       def get_service(service_name)
@@ -49,10 +49,10 @@ module Trunk
         @session.services.start(service[:uuid])
       end
 
-      def wait_for_healthy(service, ping_url, sleep_interval, max_timeout, &block)
+      def wait_for_healthy(service, ping_uri, sleep_interval, max_timeout, &block)
         (sleep_interval..max_timeout).step(sleep_interval) do
-          if check_health ping_url
-            return yield(service)
+          if ping_service(service, ping_uri)
+            return yield @session.services.get(service[:uuid])
           else
             @logger.info("waiting for service to start, sleeping for #{sleep_interval}")
           end
@@ -63,16 +63,22 @@ module Trunk
         abort(error_msg)
       end
 
-      def check_health(ping_url)
+      def ping_service (service, ping_uri)
+        ping_url "#{service[:public_dns]}/#{ping_uri}"
+      end
+
+      def ping_url(ping_url)
         response = RestClient.get ping_url
         response.code == 200
       end
 
-      def relink_router (router_name, deployed_service)
+      def router_switch(router_name, deployed_service)
+        deployed_name = deployed_service[:name]
+        abort("deployed service #{deployed_name} is currently stopped") if deployed_service[:state] == "Stopped"
+
         router_service = get_service(router_name)
         linked_services = router_service[:linked_to_service]
 
-        deployed_name = deployed_service[:name]
         deployed_uri = deployed_service[:resource_uri]
         linked_services.each {|linked_service|
           linked_service[:to_service] = deployed_uri if linked_service[:name] == deployed_name

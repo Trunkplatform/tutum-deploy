@@ -17,20 +17,22 @@ describe Trunk::TutumDeploy::Connection do
   describe 'when getting a service' do
 
     SERVICE_RUNNING = {
-        :uuid => "blue-service",
+        :uuid => "blue-uuid",
         :image_name => "trunk/web-sandbox:v1",
         :name => "web-sandbox",
-        :resource_uri => "/api/v1/service/blue-service/",
+        :resource_uri => "/api/v1/service/blue-uuid/",
         :stack => "/api/v1/stack/blue-stack/",
         :state => "Running",
+        :public_dns => "web-sandbox.blue-stack.trunkbot.svc.tutum.io"
     }
     SERVICE_STOPPED = {
-        :uuid => "green-service",
+        :uuid => "green-uuid",
         :image_name => "trunk/web-sandbox:v1",
         :name => "web-sandbox",
-        :resource_uri => "/api/v1/service/green-service/",
+        :resource_uri => "/api/v1/service/green-uuid/",
         :stack => "/api/v1/stack/green-stack/",
         :state => "Stopped",
+        :public_dns => "web-sandbox.green-stack.trunkbot.svc.tutum.io"
     }
     SERVICES_RESPONSE_HASH = {
         :meta => {},
@@ -65,19 +67,19 @@ describe Trunk::TutumDeploy::Connection do
   describe 'when deploying a service' do
 
     ROUTER = {
-        :uuid => "router-service",
+        :uuid => "router-uuid",
         :image_name => "trunk/sandbox-router:v1",
         :name => "web-sandbox",
         :stack => "/api/v1/stack/router-stack/",
         :state => "Running",
         :linked_to_service => [
             {
-                :from_service => "/api/v1/service/router-service/",
+                :from_service => "/api/v1/service/router-uuid/",
                 :name => "web-sandbox",
-                :to_service => "/api/v1/service/green-service/"
+                :to_service => "/api/v1/service/green-uuid/"
             },
             {
-                :from_service => "/api/v1/service/router-service/",
+                :from_service => "/api/v1/service/router-uuid/",
                 :name => "irrelevant",
                 :to_service => "/api/v1/service/irrelevant_linked_service/"
             }
@@ -110,7 +112,9 @@ describe Trunk::TutumDeploy::Connection do
 
     it 'should wait for healthy service and run block' do
       # given
-      stub_request(:get, "ping").to_return(:status => 200, :body => "{}")
+      stub_request(:get, "http://#{SERVICE_RUNNING[:public_dns]}/ping").to_return(:status => 200, :body => "{}")
+      stub_request(:get, "#{TUTUM_API_URL}/service/#{SERVICE_RUNNING[:uuid]}/")
+          .to_return(:status => 200, :body => JSON.generate(SERVICE_RUNNING))
 
       # when
       connection.wait_for_healthy(SERVICE_RUNNING, "ping", 5, 10) { |healthy|
@@ -129,18 +133,18 @@ describe Trunk::TutumDeploy::Connection do
       end
     end
 
-    it 'should relink router to running service' do
+    it 'should switch router to running service' do
       # given
       router_uuid = ROUTER[:uuid]
       stub_request(:get, "#{TUTUM_API_URL}/service/?name=router-sandbox").to_return(:status => 200, :body => ROUTER_RESPONSE_JSON)
       updated_links = {:linked_to_service => [
           {
-              :from_service => "/api/v1/service/router-service/",
+              :from_service => "/api/v1/service/router-uuid/",
               :name => "web-sandbox",
-              :to_service => "/api/v1/service/blue-service/"
+              :to_service => "/api/v1/service/blue-uuid/"
           },
           {
-              :from_service => "/api/v1/service/router-service/",
+              :from_service => "/api/v1/service/router-uuid/",
               :name => "irrelevant",
               :to_service => "/api/v1/service/irrelevant_linked_service/"
           }]
@@ -151,21 +155,21 @@ describe Trunk::TutumDeploy::Connection do
           .to_return(:status => 200, :body => updated_links_json)
 
       # when
-      response = connection.relink_router("router-sandbox", SERVICE_RUNNING)
+      response = connection.router_switch("router-sandbox", SERVICE_RUNNING)
 
       # then
       expect(response).to eq(updated_links)
     end
 
-    it 'should not link router to stopped service' do
-      # given
-      service = SERVICE_STOPPED
-
+    it 'should not switch router to stopped service' do
+      begin
+        connection.router_switch("router-sandbox", SERVICE_STOPPED)
+      rescue Exception => ex
+        # then
+        expect(ex.status).to be(1)
+      end
     end
 
-    it 'should stop old service' do
-
-    end
   end
 end
 

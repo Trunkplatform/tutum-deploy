@@ -10,7 +10,12 @@ module Trunk
     end
 
     def zero_deploy (router, service_name)
-      blue_green = connection.decide_bluegreen(service_name)
+      bluegreen_services = connection.decide_bluegreen(service_name)
+    end
+
+    def ping_service (service_name, stack_name, uri)
+      ping_url = "http://#{service_name}.#{stack_name}/#{uri}"
+      @connection.ping_url(ping_url)
     end
   end
 end
