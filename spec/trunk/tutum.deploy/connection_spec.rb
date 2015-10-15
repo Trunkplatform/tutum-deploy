@@ -16,21 +16,25 @@ describe Trunk::TutumDeploy::Connection do
 
   describe 'when getting a service' do
 
+    SERVICE_RUNNING = {
+        :uuid => "blue-service",
+        :image_name => "trunk/web-sandbox:v1",
+        :name => "web-sandbox",
+        :resource_uri => "/api/v1/service/blue-service/",
+        :stack => "/api/v1/stack/blue-stack/",
+        :state => "Running",
+    }
+    SERVICE_STOPPED = {
+        :uuid => "green-service",
+        :image_name => "trunk/web-sandbox:v1",
+        :name => "web-sandbox",
+        :resource_uri => "/api/v1/service/green-service/",
+        :stack => "/api/v1/stack/green-stack/",
+        :state => "Stopped",
+    }
     SERVICES_RESPONSE_HASH = {
         :meta => {},
-        :objects => [{
-                         :uuid => "123",
-                         :image_name => "trunk/web-sandbox:v1",
-                         :name => "web-sandbox",
-                         :stack => "/api/v1/stack/82068828-3a49-40fc-b614-e41ad64b846f/",
-                         :state => "Running",
-                     }, {
-                         :uuid => "466",
-                         :image_name => "trunk/web-sandbox:v1",
-                         :name => "web-sandbox",
-                         :stack => "/api/v1/stack/c8c57cfa-658d-4d28-9ee4-d6193eff0621/",
-                         :state => "Stopped",
-                     }]
+        :objects => [SERVICE_RUNNING, SERVICE_STOPPED]
     }
     SERVICES_RESPONSE_JSON = JSON.generate(SERVICES_RESPONSE_HASH)
 
@@ -60,10 +64,34 @@ describe Trunk::TutumDeploy::Connection do
 
   describe 'when deploying a service' do
 
+    ROUTER = {
+        :uuid => "router-service",
+        :image_name => "trunk/sandbox-router:v1",
+        :name => "web-sandbox",
+        :stack => "/api/v1/stack/router-stack/",
+        :state => "Running",
+        :linked_to_service => [
+            {
+                :from_service => "/api/v1/service/router-service/",
+                :name => "web-sandbox",
+                :to_service => "/api/v1/service/green-service/"
+            },
+            {
+                :from_service => "/api/v1/service/router-service/",
+                :name => "irrelevant",
+                :to_service => "/api/v1/service/irrelevant_linked_service/"
+            }
+        ],
+    }
+    ROUTER_RESPONSE_HASH = {
+        :meta => {},
+        :objects => [ROUTER]
+    }
+    ROUTER_RESPONSE_JSON = JSON.generate(ROUTER_RESPONSE_HASH)
+
     it 'should start with updated image' do
       # given
-      service = SERVICES_RESPONSE_HASH[:objects][1]
-      service_uuid = service[:uuid]
+      service_uuid = SERVICE_STOPPED[:uuid]
       deploy_image = "trunk/web-sandbox:v2"
 
       stub_request(:get, "#{TUTUM_API_URL}/service/?name=web-sandbox").to_return(:status => 200, :body => SERVICES_RESPONSE_JSON)
@@ -73,39 +101,65 @@ describe Trunk::TutumDeploy::Connection do
       stub_request(:post, "#{TUTUM_API_URL}/service/#{service_uuid}/start/").to_return(:status => 200, :body => "{}")
 
       # when
-      connection.deploy(service, "v2")
+      connection.deploy(SERVICE_STOPPED, "v2")
 
       # then
       # expect(connection.session).to receive(update).with(@service_uuid, :image_name => @deploy_image)
       # expect(connection.session).to receive(start).with(@service_uuid)
     end
 
-    it 'should wait for healthy service' do
+    it 'should wait for healthy service and run block' do
       # given
-      service = SERVICES_RESPONSE_HASH[:objects][1]
       stub_request(:get, "ping").to_return(:status => 200, :body => "{}")
 
       # when
-      result = connection.wait_for_healthy(service, "ping", 5, 10)
-
-      # then
-      expect(result).to be(0)
+      connection.wait_for_healthy(SERVICE_RUNNING, "ping", 5, 10) { |healthy|
+        # then
+        expect(healthy).to eq(SERVICE_RUNNING)
+      }
     end
 
     it 'should timeout after max wait' do
-      # given
-      service = SERVICES_RESPONSE_HASH[:objects][1]
-
       # when
       begin
-        connection.wait_for_healthy(service, "ping", 5, 1)
+        connection.wait_for_healthy(SERVICE_RUNNING, "ping", 5, 1)
       rescue Exception => ex
         # then
         expect(ex.status).to be(1)
       end
     end
 
-    it 'should relink router' do
+    it 'should relink router to running service' do
+      # given
+      router_uuid = ROUTER[:uuid]
+      stub_request(:get, "#{TUTUM_API_URL}/service/?name=router-sandbox").to_return(:status => 200, :body => ROUTER_RESPONSE_JSON)
+      updated_links = {:linked_to_service => [
+          {
+              :from_service => "/api/v1/service/router-service/",
+              :name => "web-sandbox",
+              :to_service => "/api/v1/service/blue-service/"
+          },
+          {
+              :from_service => "/api/v1/service/router-service/",
+              :name => "irrelevant",
+              :to_service => "/api/v1/service/irrelevant_linked_service/"
+          }]
+      }
+      updated_links_json = JSON.generate(updated_links)
+      stub_request(:patch, "#{TUTUM_API_URL}/service/#{router_uuid}/")
+          .with(:body => updated_links_json)
+          .to_return(:status => 200, :body => updated_links_json)
+
+      # when
+      response = connection.relink_router("router-sandbox", SERVICE_RUNNING)
+
+      # then
+      expect(response).to eq(updated_links)
+    end
+
+    it 'should not link router to stopped service' do
+      # given
+      service = SERVICE_STOPPED
 
     end
 

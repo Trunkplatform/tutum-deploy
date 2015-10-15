@@ -49,10 +49,10 @@ module Trunk
         @session.services.start(service[:uuid])
       end
 
-      def wait_for_healthy(service, ping_url, sleep_interval, max_timeout)
+      def wait_for_healthy(service, ping_url, sleep_interval, max_timeout, &block)
         (sleep_interval..max_timeout).step(sleep_interval) do
-          if check_heath ping_url
-            return 0
+          if check_health ping_url
+            return yield(service)
           else
             @logger.info("waiting for service to start, sleeping for #{sleep_interval}")
           end
@@ -63,16 +63,22 @@ module Trunk
         abort(error_msg)
       end
 
-      def check_heath(ping_url)
+      def check_health(ping_url)
         response = RestClient.get ping_url
         response.code == 200
       end
 
-      def relink_router (router_name, bluegreen_services)
-        to_deploy = bluegreen_services[:to_deploy]
-        to_shutdown = bluegreen_services[:to_shutdown]
-
+      def relink_router (router_name, deployed_service)
         router_service = get_service(router_name)
+        linked_services = router_service[:linked_to_service]
+
+        deployed_name = deployed_service[:name]
+        deployed_uri = deployed_service[:resource_uri]
+        linked_services.each {|linked_service|
+          linked_service[:to_service] = deployed_uri if linked_service[:name] == deployed_name
+        }
+
+        @session.services.update(router_service[:uuid], :linked_to_service => linked_services)
       end
     end
   end
