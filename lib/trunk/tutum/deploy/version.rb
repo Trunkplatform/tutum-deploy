@@ -1,5 +1,7 @@
 module Trunk
-  module TutumDeploy
-    VERSION = "0.0.1"
+  module Tutum
+    module Deploy
+      VERSION = "0.0.1"
+    end
   end
 end

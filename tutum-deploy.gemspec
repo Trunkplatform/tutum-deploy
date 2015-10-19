@@ -5,7 +5,7 @@ require 'trunk/tutum/deploy/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "tutum-deploy"
-  spec.version       = Trunk::TutumDeploy::VERSION
+  spec.version       = Trunk::Tutum::Deploy::VERSION
   spec.authors       = ["Yun Zhi Lin"]
   spec.email         = ["yun@yunspace.com"]
   spec.summary       = "A gem for Tutum zero downtime deployments using Stacks"
