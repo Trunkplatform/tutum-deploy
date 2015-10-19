@@ -17,7 +17,7 @@ describe Trunk::Tutum::ApiHelper  do
           .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
 
       # when
-      services = api_helper.get_services("web-sandbox")
+      services = api_helper.services("web-sandbox")
 
       # then
       expect(services).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects])

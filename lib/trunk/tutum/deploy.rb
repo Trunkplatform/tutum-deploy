@@ -9,22 +9,30 @@ module Trunk
       @tutum_api = Tutum.new(:username => "#{ENV['TUTUM_USERNAME']}", :api_key => "#{ENV['TUTUM_API_KEY']}")
       @deployment = Trunk::Tutum::Deploy::Deployment.new(@tutum_api)
 
+      @logger = Logger.new(STDOUT)
+      @logger.progname = 'Tutum Deployment'
+
       def self.deploy (service_name, version)
         @deployment.deploy(service_name, version)
       end
 
-      def self.zero_deploy (router, service_name, version)
+      def self.zero_deploy (service_name, version, router_name, ping_uri)
         bluegreen_services = @deployment.decide_bluegreen(service_name)
         to_deploy = bluegreen_services[:to_deploy]
 
+        @logger.info("deploying: #{to_deploy} with version #{version}")
         @deployment.deploy(to_deploy, version)
 
-        @deployment.wait_for_healthy
+        @logger.info("waiting for: #{to_deploy} to startup")
+        @deployment.wait_for_healthy(to_deploy, ping_uri) { |deployed|
+          @logger.info("switching router #{router_name}")
+          @deployment.router_switch(router_name, deployed)
+        }
       end
 
-      def self.ping_service (service_name, stack_name, uri)
+      def self.service? (service_name, stack_name, uri)
         ping_url = "http://#{service_name}.#{stack_name}/#{uri}"
-        @deployment.ping_url(ping_url)
+        @deployment.ping(ping_url)
       end
     end
   end

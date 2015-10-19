@@ -19,11 +19,11 @@ module Trunk
           @max_timeout = max_timeout
 
           @logger = Logger.new(STDOUT)
-          @logger.progname = "Tutum Deploy"
+          @logger.progname = "Tutum Deployment"
         end
 
         def decide_bluegreen(service_name)
-          services = get_services(service_name)
+          services = services(service_name)
 
           bluegreen = {}
           services.each { |service|
@@ -56,7 +56,7 @@ module Trunk
 
         def wait_for_healthy(service, ping_uri, &block)
           (0..@max_timeout).step(@sleep_interval) do
-            if ping_service(service, ping_uri)
+            if service?(service, ping_uri)
               return yield @tutum_api.services.get(service[:uuid])
             else
               @logger.info("waiting for service to start, sleeping for #{@sleep_interval}")
@@ -73,7 +73,7 @@ module Trunk
           deployed_name = deployed_service[:name]
           abort("deployed service #{deployed_name} is currently stopped") if deployed_service[:state] == "Stopped"
 
-          router_service = get_service(router_name)
+          router_service = service(router_name)
           linked_services = router_service[:linked_to_service]
 
           deployed_uri = deployed_service[:resource_uri]
