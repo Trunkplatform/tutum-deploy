@@ -25,7 +25,7 @@ describe Trunk::Tutum::Deploy::Deployment do
       expect(blue_green[:to_deploy]).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][1])
     end
 
-    it 'should start with updated image' do
+    it 'should redeploy with updated image' do
       # given
       service_uuid = TestFixtures::SERVICE_STOPPED[:uuid]
       deploy_image = "trunk/web-sandbox:v2"
@@ -33,9 +33,9 @@ describe Trunk::Tutum::Deploy::Deployment do
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
           .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
       stub_request(:patch, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/")
-          .with(:body => "{\"image_name\":\"#{deploy_image}\"}")
+          .with(:body => "{\"image\":\"#{deploy_image}\"}")
           .to_return(:status => 200, :body => "{}")
-      stub_request(:post, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/start/").to_return(:status => 200, :body => "{}")
+      stub_request(:post, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/redeploy/").to_return(:status => 200, :body => "{}")
 
       # when
       deployment.deploy(TestFixtures::SERVICE_STOPPED, "v2")
