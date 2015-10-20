@@ -4,56 +4,62 @@ require 'rest-client'
 require 'tutum/tutum_api'
 # require_relative "../../../tutum/tutum_api"
 
-module Trunk
-  module Tutum
-    module ApiHelper
+module Trunk::Tutum::ApiHelper
 
-      def services(service_name)
-        services = @tutum_api.services.list({:name => service_name})[:objects]
-        raise "Failure: No services found for: #{service_name}" if services.length == 0
-        services
-      end
+  def services(service_name)
+    services = @tutum_api.services.list({:name => service_name})[:objects]
+    raise "Failure: No services found for: #{service_name}" if services.length == 0
+    services
+  end
 
-      def service(service_name)
-        services = services(service_name)
-        raise "Failure: Multiple services with name: #{service_name}" if services.length > 1
-        services[0]
-      end
+  def service(service_name)
+    services = services(service_name)
+    raise "Failure: Multiple services with name: #{service_name}" if services.length > 1
+    services[0]
+  end
 
-      def service_healthy?(service, ping_uri)
-        ping "#{service[:public_dns]}/#{ping_uri}"
-      end
-
-      def ping(ping_url)
-        begin
-          response = RestClient.get ping_url
-          response.code == 200
-        rescue Exception => ex
-          @logger.warn("ping #{ping_url} failed with #{ex}")
-          return false
-        end
-      end
-
-      # def check_action(service, ping_uri = "/", &block)
-      #   service_uuid = service[:uuid]
-      #   state = nil
-      #   (0..@max_timeout).step(@sleep_interval) do
-      #     @tutum_api.actions.list({})
-      #     service = @tutum_api.services.get(service_uuid)
-      #
-      #     if service_healthy?(service, ping_uri)
-      #       return yield service
-      #     else
-      #       @logger.info("waiting for service to redeploy, sleeping for #{@sleep_interval}")
-      #       sleep @sleep_interval
-      #     end
-      #   end
-      #
-      #   error_msg = "service #{service[:uuid]} not started after maximum time out of #{@max_timeout} seconds"
-      #   @logger.error(error_msg)
-      #   abort(error_msg)
-      # end
-
+  def ping(ping_url)
+    begin
+      response = RestClient.get ping_url
+      response.code == 200
+    rescue Exception => ex
+      @logger.warn("ping #{ping_url} failed with #{ex}")
+      return false
     end
   end
+
+  def completed?(action_uri, &block)
+    action_uuid = action_uri.match(/\/action\/(.*)\//i).captures[0]
+
+    (0..@max_timeout).step(@sleep_interval) do
+      status = @tutum_api.actions.get(action_uuid)[:state]
+      if status == 'Success' || status == 'Failed'
+        @logger.info("Action #{status}")
+        return block.call status
+      end
+      @logger.debug("Action #{status}, sleeping for #{@sleep_interval}")
+      sleep @sleep_interval
+    end
+
+    error_msg = "Action not completed after maximum time out of #{@max_timeout} seconds"
+    @logger.error(error_msg)
+    abort(error_msg)
+  end
+
+  def service_healthy?(service, ping_uri = "/", &block)
+    healthy?("#{service[:public_dns]}/#{ping_uri}", &block)
+  end
+
+  def healthy?(ping_url, &block)
+    (0..@max_timeout).step(@sleep_interval) do
+      return block.call true if ping ping_url
+      @logger.debug("waiting for service to be healthy, sleeping for #{@sleep_interval}")
+      sleep @sleep_interval
+    end
+
+    error_msg = "service not healthy after maximum time out of #{@max_timeout} seconds"
+    @logger.error(error_msg)
+    abort(error_msg)
+  end
+
 end

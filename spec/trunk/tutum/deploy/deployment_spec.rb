@@ -4,7 +4,6 @@ require 'json'
 require 'trunk/tutum/deploy/deployment'
 require 'trunk/tutum/test_fixtures'
 
-
 describe Trunk::Tutum::Deploy::Deployment do
   include TestFixtures
 
@@ -18,7 +17,7 @@ describe Trunk::Tutum::Deploy::Deployment do
           .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
 
       # when
-      blue_green = deployment.decide_bluegreen("web-sandbox")
+      blue_green = deployment.get_candidates("web-sandbox")
 
       # then
       expect(blue_green[:to_shutdown]).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][0])
@@ -35,40 +34,17 @@ describe Trunk::Tutum::Deploy::Deployment do
       stub_request(:patch, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/")
           .with(:body => "{\"image\":\"#{deploy_image}\"}")
           .to_return(:status => 200, :body => "{}")
-      stub_request(:post, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/redeploy/").to_return(:status => 200, :body => "{}")
+      stub_request(:post, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/redeploy/")
+          .to_return(:status => 200,
+                     :headers => {:x_tutum_action_uri => "/api/v1/action/action_success/"},
+                     :body => JSON.generate(TestFixtures::ACTION_SUCCESS))
 
       # when
-      deployment.deploy(TestFixtures::SERVICE_STOPPED, "v2")
+      response = deployment.deploy(TestFixtures::SERVICE_STOPPED, "v2")
 
       # then
-      # expect(connection.session).to receive(update).with(@service_uuid, :image_name => @deploy_image)
-      # expect(connection.session).to receive(start).with(@service_uuid)
-    end
+      expect(response).to eq(TestFixtures::ASYNC_RESPONSE)
 
-    it 'should wait for healthy service and run block' do
-      # given
-      stub_request(:get, "http://#{TestFixtures::SERVICE_RUNNING[:public_dns]}/ping").to_return(:status => 200, :body => "{}")
-      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/#{TestFixtures::SERVICE_RUNNING[:uuid]}/")
-          .to_return(:status => 200, :body => JSON.generate(TestFixtures::SERVICE_RUNNING))
-
-      # when
-      deployment.wait_for_healthy(TestFixtures::SERVICE_RUNNING, "ping") { |healthy|
-        # then
-        expect(healthy).to eq(TestFixtures::SERVICE_RUNNING)
-      }
-    end
-
-    it 'should timeout after max wait' do
-      # given
-      stub_request(:get, "http://#{TestFixtures::SERVICE_RUNNING[:public_dns]}/ping").to_return(:status => 503, :body => "{}")
-
-      # when
-      begin
-        deployment.wait_for_healthy(TestFixtures::SERVICE_RUNNING, "ping")
-      rescue Exception => ex
-        # then
-        expect(ex.status).to be(1)
-      end
     end
 
     it 'should switch router to running service' do
@@ -76,7 +52,8 @@ describe Trunk::Tutum::Deploy::Deployment do
       router_uuid = TestFixtures::ROUTER[:uuid]
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=router-sandbox")
           .to_return(:status => 200, :body => TestFixtures::ROUTER_RESPONSE_JSON)
-      updated_links = {:linked_to_service => [
+      updated_links = {
+          :linked_to_service => [
           {
               :from_service => "/api/v1/service/router-uuid/",
               :name => "web-sandbox",
@@ -97,7 +74,7 @@ describe Trunk::Tutum::Deploy::Deployment do
       response = deployment.router_switch("router-sandbox", TestFixtures::SERVICE_RUNNING)
 
       # then
-      expect(response).to eq(updated_links)
+      expect(response[:body]).to eq(updated_links)
     end
 
     it 'should not switch router to stopped service' do
