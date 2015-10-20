@@ -39,32 +39,24 @@ module Trunk
         def deploy(service, version)
           deploy_image = service[:image_name].gsub(/:(.*)/, ":#{version}")
 
-          @logger.info "updating #{service[:name]} image to #{deploy_image}"
-          @tutum_api.services.update(service[:uuid], :image_name => deploy_image)
+          @logger.info "updating [#{service[:public_dns]}] to image [#{deploy_image}]"
+          @tutum_api.services.update(service[:uuid], :image => deploy_image)
 
-          @logger.info "starting #{service[:name]} with uuid #{service[:uuid]}"
-          @tutum_api.services.start(service[:uuid])
+          @logger.info "redeploying [#{service[:public_dns]}]"
+          @tutum_api.services.redeploy(service[:uuid])
         end
 
-        def healthy_deploy(service, version)
-          deploy_image = service[:image_name].gsub(/:(.*)/, ":#{version}")
-
-          @tutum_api.services.update(service[:uuid], :image_name => deploy_image)
-          @tutum_api.services.start(service[:uuid])
-        end
-
-
-        def wait_for_healthy(service, ping_uri, &block)
+        def wait_for_healthy(service, ping_uri = "/", &block)
           (0..@max_timeout).step(@sleep_interval) do
-            if service?(service, ping_uri)
+            if service_healthy?(service, ping_uri)
               return yield @tutum_api.services.get(service[:uuid])
             else
-              @logger.info("waiting for service to start, sleeping for #{@sleep_interval}")
+              @logger.info("waiting for service to be healthy, sleeping for #{@sleep_interval}")
               sleep @sleep_interval
             end
           end
 
-          error_msg = "service #{service[:uuid]} not started after maximum time out of #{@max_timeout} seconds"
+          error_msg = "service #{service[:uuid]} not healthy after maximum time out of #{@max_timeout} seconds"
           @logger.error(error_msg)
           abort(error_msg)
         end

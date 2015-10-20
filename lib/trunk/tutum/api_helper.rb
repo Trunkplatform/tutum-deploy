@@ -9,7 +9,9 @@ module Trunk
     module ApiHelper
 
       def services(service_name)
-        @tutum_api.services.list({:name => service_name})[:objects]
+        services = @tutum_api.services.list({:name => service_name})[:objects]
+        raise "Failure: No services found for: #{service_name}" if services.length == 0
+        services
       end
 
       def service(service_name)
@@ -18,7 +20,7 @@ module Trunk
         services[0]
       end
 
-      def service?(service, ping_uri)
+      def service_healthy?(service, ping_uri)
         ping "#{service[:public_dns]}/#{ping_uri}"
       end
 
@@ -31,6 +33,26 @@ module Trunk
           return false
         end
       end
+
+      # def check_action(service, ping_uri = "/", &block)
+      #   service_uuid = service[:uuid]
+      #   state = nil
+      #   (0..@max_timeout).step(@sleep_interval) do
+      #     @tutum_api.actions.list({})
+      #     service = @tutum_api.services.get(service_uuid)
+      #
+      #     if service_healthy?(service, ping_uri)
+      #       return yield service
+      #     else
+      #       @logger.info("waiting for service to redeploy, sleeping for #{@sleep_interval}")
+      #       sleep @sleep_interval
+      #     end
+      #   end
+      #
+      #   error_msg = "service #{service[:uuid]} not started after maximum time out of #{@max_timeout} seconds"
+      #   @logger.error(error_msg)
+      #   abort(error_msg)
+      # end
 
     end
   end
