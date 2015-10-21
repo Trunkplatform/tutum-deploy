@@ -39,6 +39,24 @@ describe Trunk::Tutum::Deploy::Deployment do
       expect(deployment.to_deploy).to eq(TestFixtures::SERVICE_STOPPED)
     end
 
+    it 'should get candidates when not running' do
+      # given
+      NOT_RUNNING = {:meta => {}, :objects => [
+          {:state => 'Not running'},
+          {:state => 'Not running'}
+      ]}
+
+      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
+          .to_return(:status => 200, :body => JSON.generate(NOT_RUNNING))
+
+      # when
+      deployment.get_candidates
+
+      # then
+      expect(deployment.to_shutdown).to be_nil
+      expect(deployment.to_deploy).to eq({:state => 'Not running'})
+    end
+
     it 'no candidate when both running' do
       # given
       BOTH_RUNNING = {:meta => {}, :objects => [TestFixtures::SERVICE_RUNNING, TestFixtures::SERVICE_RUNNING]}
@@ -122,7 +140,7 @@ describe Trunk::Tutum::Deploy::Deployment do
         deployment.router_switch("router-sandbox", TestFixtures::SERVICE_STOPPED)
       rescue Exception => ex
         # then
-        expect(ex.status).to be(1)
+        expect(ex.message).to eq("deployed service web-sandbox is not running")
       end
     end
 

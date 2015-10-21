@@ -47,6 +47,29 @@ describe Trunk::Tutum::ApiHelper  do
       end
     end
 
+    it 'http ping path should use be pass through' do
+      # given
+      ping_url = "https://hello.com/world"
+
+      # when
+      ping_url = api_helper.ping_url(nil, ping_url)
+
+      # then
+      expect(ping_url).to eq(ping_url)
+    end
+
+    it 'non http ping path should build a url' do
+      # given
+      service = {:public_dns=>"hello.com"}
+      ping_path = ":8080/world"
+
+      # when
+      ping_url = api_helper.ping_url(service, ping_path)
+
+      # then
+      expect(ping_url).to eq("http://hello.com:8080/world")
+    end
+
   end
 
   describe 'Action API' do

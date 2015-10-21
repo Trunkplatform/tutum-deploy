@@ -41,7 +41,7 @@ namespace :tutum do
     service_name = args[:service_name]
     version = args[:version]
     router_name = args[:router_name]
-    ping_path = args[:ping_uri]
+    ping_path = args[:ping_path]
 
     begin
       @deployment = Trunk::Tutum::Deploy::Deployment

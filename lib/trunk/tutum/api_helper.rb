@@ -19,7 +19,9 @@ module Trunk::Tutum::ApiHelper
   end
 
   def ping_url(service, ping_path)
-    "#{service[:public_dns]}/#{ping_path}"
+    return ping_path if ping_path.include? "http"
+
+    "http://#{service[:public_dns]}#{ping_path}"
   end
 
   def ping(ping_url)

@@ -29,13 +29,15 @@ module Trunk::Tutum::Deploy
 
       if services.length == 1
         @to_deploy ||= services[0]
-      elsif services.each { |service|
-        if service[:state] == "Stopped"
-          @to_deploy ||= service
-        elsif service[:state] == "Running"
-          @to_shutdown ||= service
-        end
-      }
+      else
+        services.each { |service|
+          service_state = service[:state]
+          if service_state == "Stopped" || service_state == 'Not running'
+            @to_deploy ||= service
+          elsif service_state == "Running"
+            @to_shutdown ||= service
+          end
+        }
       end
       @logger.debug ("to_deploy: #{@to_deploy[:public_dns]}") if @to_deploy
       @logger.debug ("to_shutdown: #{@to_shutdown[:public_dns]}") if @to_shutdown
@@ -54,18 +56,25 @@ module Trunk::Tutum::Deploy
             block.call @tutum_api.services.get(@to_deploy[:uuid])
           }
         else
-          abort("deployment failed")
+          raise("deployment failed")
         end
       }
     end
 
     def dual_stack_deploy(router_name)
-      abort "nothing to deploy" if @to_deploy.nil?
+      raise "nothing to deploy" if @to_deploy.nil?
 
       single_stack_deploy { |deployed|
-        @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
         router_switch(router_name, deployed) {
-          @tutum_api.services.stop(@to_shutdown[:uuid]) if @to_shutdown
+          @logger.info("router switched #{deployed[:public_dns]}, shutting down #{to_shutdown[:public_dns]}")
+          if @to_shutdown
+            response = @tutum_api.services.stop(@to_shutdown[:uuid])
+            completed? (response[:action_uri]) { |action_state|
+              if action_state == "Failed"
+                raise "failed to stop Service"
+              end
+            }
+          end
         }
       }
     end
@@ -84,19 +93,27 @@ module Trunk::Tutum::Deploy
       @tutum_api.services.redeploy(@to_deploy[:uuid])
     end
 
-    def router_switch(router_name, deployed_service)
-      deployed_name = deployed_service[:name]
-      abort("deployed service #{deployed_name} is currently stopped") if deployed_service[:state] == "Stopped"
+    def router_switch(router_name, deployed, &block)
+      deployed_name = deployed[:name]
+      raise("deployed service #{deployed_name} is not running") if deployed[:state] != "Running"
 
       router_service = service(router_name)
       linked_services = router_service[:linked_to_service]
 
-      deployed_uri = deployed_service[:resource_uri]
+      deployed_uri = deployed[:resource_uri]
       linked_services.each { |linked_service|
         linked_service[:to_service] = deployed_uri if linked_service[:name] == deployed_name
       }
 
-      @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
+      @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
+      response = @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
+      completed?(response[:action_uri]) { |action_state|
+        if action_state == "Success"
+          return block.call
+        else
+          raise("failed to switch router")
+        end
+      }
     end
   end
 end
