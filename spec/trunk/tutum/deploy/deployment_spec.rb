@@ -9,19 +9,19 @@ describe Trunk::Tutum::Deploy::Deployment do
 
   subject(:deployment) { Trunk::Tutum::Deploy::Deployment.new(TestFixtures::TUTUM_API, "web-sandbox", "v2", "ping") }
 
-  describe 'when deploying a service' do
+  describe 'When deploying a service' do
 
     it 'should get candidates with one service running and one stopped' do
       # given
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
-          .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
+          .to_return(:status => 200, :body => TestFixtures::SERVICES_JSON)
 
       # when
       deployment.get_candidates
 
       # then
-      expect(deployment.to_shutdown).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][0])
-      expect(deployment.to_deploy).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][1])
+      expect(deployment.to_shutdown).to eq(TestFixtures::SERVICES[:objects][0])
+      expect(deployment.to_deploy).to eq(TestFixtures::SERVICES[:objects][1])
     end
 
     it 'should get candidates with both stopped' do
@@ -60,7 +60,7 @@ describe Trunk::Tutum::Deploy::Deployment do
       deploy_image = "trunk/web-sandbox:v2"
 
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
-          .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
+          .to_return(:status => 200, :body => TestFixtures::SERVICES_JSON)
       stub_request(:patch, "#{TestFixtures::TUTUM_API_URL}/service/#{service_uuid}/")
           .with(:body => "{\"image\":\"#{deploy_image}\"}")
           .to_return(:status => 200, :body => "{}")
@@ -77,11 +77,21 @@ describe Trunk::Tutum::Deploy::Deployment do
 
     end
 
+  end
+
+  describe 'When deploying service in single stack' do
+
+  end
+
+  describe 'When deploying service in dual stacks' do
     it 'should switch router to running service' do
       # given
       router_uuid = TestFixtures::ROUTER[:uuid]
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=router-sandbox")
-          .to_return(:status => 200, :body => TestFixtures::ROUTER_RESPONSE_JSON)
+          .to_return(:status => 200, :body => TestFixtures::ROUTERS_JSON)
+      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/router-uuid/")
+          .to_return(:status => 200, :body => JSON.generate(TestFixtures::ROUTER))
+
       updated_links = {
           :linked_to_service => [
           {

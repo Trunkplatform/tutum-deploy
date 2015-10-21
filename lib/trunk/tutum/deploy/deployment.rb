@@ -37,6 +37,9 @@ module Trunk::Tutum::Deploy
         end
       }
       end
+      @logger.debug ("to_deploy: #{@to_deploy[:public_dns]}") if @to_deploy
+      @logger.debug ("to_shutdown: #{@to_shutdown[:public_dns]}") if @to_shutdown
+
       self
     end
 
@@ -57,6 +60,8 @@ module Trunk::Tutum::Deploy
     end
 
     def dual_stack_deploy(router_name)
+      abort "nothing to deploy" if @to_deploy.nil?
+
       single_stack_deploy { |deployed|
         @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
         router_switch(router_name, deployed) {

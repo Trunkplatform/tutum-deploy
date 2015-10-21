@@ -19,7 +19,7 @@ namespace :tutum do
   @logger.progname = 'Tutum Deployment'
 
   desc 'Deploy Single Stack Service'
-  task :deploy, [:service_name, :version, :ping_path] do |_, args|
+  task :single_stack_deploy, [:service_name, :version, :ping_path] do |_, args|
 
     service_name = args[:service_name]
     version = args[:version]

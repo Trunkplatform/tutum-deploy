@@ -15,7 +15,7 @@ module Trunk::Tutum::ApiHelper
   def service(service_name)
     services = services(service_name)
     raise "Failure: Multiple services with name: #{service_name}" if services.length > 1
-    services[0]
+    @tutum_api.services.get(services[0][:uuid])
   end
 
   def ping_url(service, ping_path)

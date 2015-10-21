@@ -24,11 +24,11 @@ module TestFixtures
       :state => "Stopped",
       :public_dns => "web-sandbox.green-stack.trunkbot.svc.tutum.io"
   }
-  SERVICES_RESPONSE_HASH = {
+  SERVICES = {
       :meta => {},
       :objects => [SERVICE_RUNNING, SERVICE_STOPPED]
   }
-  SERVICES_RESPONSE_JSON = JSON.generate(SERVICES_RESPONSE_HASH)
+  SERVICES_JSON = JSON.generate(SERVICES)
 
   ROUTER = {
       :uuid => "router-uuid",
@@ -49,11 +49,11 @@ module TestFixtures
           }
       ],
   }
-  ROUTER_RESPONSE_HASH = {
+  ROUTERS = {
       :meta => {},
       :objects => [ROUTER]
   }
-  ROUTER_RESPONSE_JSON = JSON.generate(ROUTER_RESPONSE_HASH)
+  ROUTERS_JSON = JSON.generate(ROUTERS)
 
   ACTION_SUCCESS = {
       :action => "Service Update",

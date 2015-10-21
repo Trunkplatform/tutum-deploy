@@ -14,13 +14,13 @@ describe Trunk::Tutum::ApiHelper  do
     it 'should convert symbolized hash' do
       # given
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
-          .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
+          .to_return(:status => 200, :body => TestFixtures::SERVICES_JSON)
 
       # when
       services = api_helper.services("web-sandbox")
 
       # then
-      expect(services).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects])
+      expect(services).to eq(TestFixtures::SERVICES[:objects])
     end
 
     it 'should ping for healthy service' do
