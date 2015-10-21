@@ -15,17 +15,21 @@ namespace :tutum do
   max_timeout =  ENV['MAX_TIMEOUT']
   max_timeout ||= 60
 
-  @deployment = Trunk::Tutum::Deploy::Deployment.new(@tutum_api, sleep_interval, max_timeout)
   @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
 
   desc 'Deploy Single Stack Service'
-  task :deploy, [:service_name, :version] do |_, args|
-    to_deploy = @deployment.service(args[:service_name])
+  task :deploy, [:service_name, :version, :ping_path] do |_, args|
+
+    service_name = args[:service_name]
     version = args[:version]
+    ping_path = args[:ping_path]
 
     begin
-      deploy(to_deploy, version)
+      @deployment = Deployment.new(@tutum_api, service_name, version, ping_path, sleep_interval, max_timeout)
+                        .get_candidates.single_stack_deploy {|deployed|
+        @logger.info("#{deployed[:public_dns]} deployed successfully")
+      }
     rescue Exception => ex
       @logger.error ex.backtrace
       abort ex.message.red
@@ -33,14 +37,16 @@ namespace :tutum do
   end
 
   desc 'Deploy Dual Stack Service with zero downtime'
-  task :zero_deploy, [:service_name, :version, :router_name, :ping_uri] do |_, args|
+  task :dual_stack_deploy, [:service_name, :version, :router_name, :ping_path] do |_, args|
     service_name = args[:service_name]
     version = args[:version]
     router_name = args[:router_name]
-    ping_uri = args[:ping_uri]
+    ping_path = args[:ping_uri]
 
     begin
-      @deployment.zero_deploy(service_name, version, router_name, ping_uri)
+      @deployment = Trunk::Tutum::Deploy::Deployment
+                        .new(@tutum_api, service_name, version, ping_path, sleep_interval, max_timeout)
+                        .get_candidates.dual_stack_deploy router_name
     rescue Exception => ex
       @logger.error ex.backtrace
       abort ex.message.red

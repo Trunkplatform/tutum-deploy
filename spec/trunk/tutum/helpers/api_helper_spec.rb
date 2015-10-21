@@ -7,7 +7,7 @@ require 'trunk/tutum/test_fixtures'
 describe Trunk::Tutum::ApiHelper  do
   include TestFixtures
 
-  subject(:api_helper) { TestFixtures::ApiHelperStub.new(TestFixtures::TUTUM_API, 1, 2) }
+  subject(:api_helper) { TestFixtures::ApiHelperStub.new(TestFixtures::TUTUM_API) }
 
   describe 'Service API' do
 
@@ -23,26 +23,24 @@ describe Trunk::Tutum::ApiHelper  do
       expect(services).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects])
     end
 
-    it 'should wait for healthy service and run block' do
+    it 'should ping for healthy service' do
       # given
-      stub_request(:get, "http://#{TestFixtures::SERVICE_RUNNING[:public_dns]}/ping").to_return(:status => 200, :body => "{}")
-      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/#{TestFixtures::SERVICE_RUNNING[:uuid]}/")
-          .to_return(:status => 200, :body => JSON.generate(TestFixtures::SERVICE_RUNNING))
+      stub_request(:get, "http://test/ping").to_return(:status => 200, :body => "{}")
 
       # when
-      api_helper.service_healthy?(TestFixtures::SERVICE_RUNNING, "ping") { |result|
+      api_helper.healthy?("http://test/ping") { |result|
         # then
         expect(result).to be_truthy
       }
     end
 
-    it 'should timeout after max wait' do
+    it 'health check should timeout after max wait' do
       # given
-      stub_request(:get, "http://#{TestFixtures::SERVICE_RUNNING[:public_dns]}/ping").to_return(:status => 503, :body => "{}")
+      stub_request(:get, "http://test/ping").to_return(:status => 503, :body => "{}")
 
       # when
       begin
-        api_helper.service_healthy?(TestFixtures::SERVICE_RUNNING, "ping")
+        api_helper.healthy?("http://test/ping")
       rescue Exception => ex
         # then
         expect(ex.status).to be(1)

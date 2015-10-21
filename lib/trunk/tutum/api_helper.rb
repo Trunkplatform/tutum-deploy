@@ -18,6 +18,10 @@ module Trunk::Tutum::ApiHelper
     services[0]
   end
 
+  def ping_url(service, ping_path)
+    "#{service[:public_dns]}/#{ping_path}"
+  end
+
   def ping(ping_url)
     begin
       response = RestClient.get ping_url
@@ -37,7 +41,7 @@ module Trunk::Tutum::ApiHelper
         @logger.info("Action #{status}")
         return block.call status
       end
-      @logger.debug("Action #{status}, sleeping for #{@sleep_interval}")
+      @logger.debug("action #{status}, sleeping for #{@sleep_interval}")
       sleep @sleep_interval
     end
 
@@ -46,14 +50,10 @@ module Trunk::Tutum::ApiHelper
     abort(error_msg)
   end
 
-  def service_healthy?(service, ping_uri = "/", &block)
-    healthy?("#{service[:public_dns]}/#{ping_uri}", &block)
-  end
-
   def healthy?(ping_url, &block)
     (0..@max_timeout).step(@sleep_interval) do
       return block.call true if ping ping_url
-      @logger.debug("waiting for service to be healthy, sleeping for #{@sleep_interval}")
+      @logger.debug("sleeping for #{@sleep_interval}")
       sleep @sleep_interval
     end
 

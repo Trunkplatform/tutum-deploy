@@ -74,10 +74,15 @@ module TestFixtures
     include Trunk::Tutum::ApiHelper
 
     attr_reader :tutum_api
-    def initialize(session, sleep_interval = 5, max_timeout = 60)
+    def initialize(session, service_name="web-sandbox", version="1", ping_path="/", sleep_interval = 1, max_timeout = 2)
       @tutum_api = session
+      @service_name = service_name
+      @version = version
+      @ping_path = ping_path
+
       @sleep_interval = sleep_interval
       @max_timeout = max_timeout
+
       @logger = Logger.new(STDOUT)
       @logger.progname = 'Test'
     end

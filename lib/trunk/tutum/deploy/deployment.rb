@@ -1,7 +1,6 @@
 require 'logger'
 require 'tutum'
 require 'trunk/tutum/api_helper'
-# require "../../../tutum/tutum_api"
 require 'tutum/tutum_api'
 require 'colored'
 
@@ -9,10 +8,15 @@ module Trunk::Tutum::Deploy
   class Deployment
     include Trunk::Tutum::ApiHelper
 
-    attr_reader :tutum_api
+    attr_reader :tutum_api, :service_name, :ping_path
+    attr_accessor :to_deploy, :to_shutdown
 
-    def initialize(tutum_api, sleep_interval = 5, max_timeout = 60)
+    def initialize(tutum_api, service_name, version, ping_path="/", sleep_interval = 5, max_timeout = 60)
       @tutum_api = tutum_api
+      @service_name = service_name
+      @version = version
+      @ping_path = ping_path
+
       @sleep_interval = sleep_interval
       @max_timeout = max_timeout
 
@@ -20,26 +24,59 @@ module Trunk::Tutum::Deploy
       @logger.progname = "Tutum Deployment"
     end
 
-    def get_candidates(service_name)
-      candidates = {}
-      services(service_name).each { |service|
+    def get_candidates()
+      services = services(@service_name)
+
+      if services.length == 1
+        @to_deploy ||= services[0]
+      elsif services.each { |service|
         if service[:state] == "Stopped"
-          candidates[:to_deploy] = service
-        else
-          candidates[:to_shutdown] = service
+          @to_deploy ||= service
+        elsif service[:state] == "Running"
+          @to_shutdown ||= service
         end
       }
-      candidates
+      end
+      self
     end
 
-    def deploy(service, version)
-      deploy_image = service[:image_name].gsub(/:(.*)/, ":#{version}")
+    def single_stack_deploy (&block)
+      @logger.info("deploying: #{@to_deploy[:public_dns]} with version #{@version}")
+      response = deploy
+      completed?(response[:action_uri]) { |action_state|
+        @logger.info "Deployment status: #{action_state})"
+        if action_state == "Success"
+          healthy? (ping_url(@to_deploy, @ping_path)) {
+            @logger.info "#{@to_deploy[:public_dns]} running healthy"
+            block.call @tutum_api.services.get(@to_deploy[:uuid])
+          }
+        else
+          abort("deployment failed")
+        end
+      }
+    end
 
-      @logger.info "updating [#{service[:public_dns]}] to image [#{deploy_image}]"
-      @tutum_api.services.update(service[:uuid], :image => deploy_image)
+    def dual_stack_deploy(router_name)
+      single_stack_deploy { |deployed|
+        @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
+        router_switch(router_name, deployed) {
+          @tutum_api.services.stop(@to_shutdown[:uuid]) if @to_shutdown
+        }
+      }
+    end
 
-      @logger.info "redeploying [#{service[:public_dns]}]"
-      @tutum_api.services.redeploy(service[:uuid])
+    def dynamic_stack_deploy
+
+    end
+
+    def deploy
+      deploy_image = @to_deploy[:image_name].gsub(/:(.*)/, ":#{@version}")
+
+      @logger.info "updating [#{@to_deploy[:public_dns]}] to image [#{deploy_image}]"
+      @tutum_api.services.update(@to_deploy[:uuid], :image => deploy_image)
+
+      @logger.info "redeploying [#{@to_deploy[:public_dns]}]"
+      @tutum_api.services.redeploy(@to_deploy[:uuid])
     end
 
     def router_switch(router_name, deployed_service)

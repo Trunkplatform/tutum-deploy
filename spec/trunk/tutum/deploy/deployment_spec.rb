@@ -7,21 +7,51 @@ require 'trunk/tutum/test_fixtures'
 describe Trunk::Tutum::Deploy::Deployment do
   include TestFixtures
 
-  subject(:deployment) { Trunk::Tutum::Deploy::Deployment.new(TestFixtures::TUTUM_API, 1, 2) }
+  subject(:deployment) { Trunk::Tutum::Deploy::Deployment.new(TestFixtures::TUTUM_API, "web-sandbox", "v2", "ping") }
 
   describe 'when deploying a service' do
 
-    it 'should decide blue or green' do
+    it 'should get candidates with one service running and one stopped' do
       # given
       stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
           .to_return(:status => 200, :body => TestFixtures::SERVICES_RESPONSE_JSON)
 
       # when
-      blue_green = deployment.get_candidates("web-sandbox")
+      deployment.get_candidates
 
       # then
-      expect(blue_green[:to_shutdown]).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][0])
-      expect(blue_green[:to_deploy]).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][1])
+      expect(deployment.to_shutdown).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][0])
+      expect(deployment.to_deploy).to eq(TestFixtures::SERVICES_RESPONSE_HASH[:objects][1])
+    end
+
+    it 'should get candidates with both stopped' do
+      # given
+      BOTH_STOPPED = {:meta => {}, :objects => [TestFixtures::SERVICE_STOPPED, TestFixtures::SERVICE_STOPPED]}
+
+      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
+          .to_return(:status => 200, :body => JSON.generate(BOTH_STOPPED))
+
+      # when
+      deployment.get_candidates
+
+      # then
+      expect(deployment.to_shutdown).to be_nil
+      expect(deployment.to_deploy).to eq(TestFixtures::SERVICE_STOPPED)
+    end
+
+    it 'no candidate when both running' do
+      # given
+      BOTH_RUNNING = {:meta => {}, :objects => [TestFixtures::SERVICE_RUNNING, TestFixtures::SERVICE_RUNNING]}
+
+      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/service/?name=web-sandbox")
+          .to_return(:status => 200, :body => JSON.generate(BOTH_RUNNING))
+
+      # when
+      deployment.get_candidates
+
+      # then
+      expect(deployment.to_deploy).to be_nil
+      expect(deployment.to_shutdown).to eq(TestFixtures::SERVICE_RUNNING)
     end
 
     it 'should redeploy with updated image' do
@@ -40,7 +70,7 @@ describe Trunk::Tutum::Deploy::Deployment do
                      :body => JSON.generate(TestFixtures::ACTION_SUCCESS))
 
       # when
-      response = deployment.deploy(TestFixtures::SERVICE_STOPPED, "v2")
+      response = deployment.get_candidates.deploy
 
       # then
       expect(response).to eq(TestFixtures::ASYNC_RESPONSE)
