@@ -126,10 +126,17 @@ describe Trunk::Tutum::Deploy::Deployment do
       updated_links_json = JSON.generate(updated_links)
       stub_request(:patch, "#{TestFixtures::TUTUM_API_URL}/service/#{router_uuid}/")
           .with(:body => updated_links_json)
-          .to_return(:status => 200, :body => updated_links_json)
+          .to_return(:status => 200,
+                     :headers => {:x_tutum_action_uri => "/api/v1/action/action_uuid/"},
+                     :body => updated_links_json)
+      stub_request(:get, "#{TestFixtures::TUTUM_API_URL}/action/action_uuid/").
+          to_return(:status => 200, :body => "{\"state\": \"Success\"}")
+
 
       # when
-      response = deployment.router_switch("router-sandbox", TestFixtures::SERVICE_RUNNING)
+      response = deployment.router_switch("router-sandbox", TestFixtures::SERVICE_RUNNING){||
+
+      }
 
       # then
       expect(response[:body]).to eq(updated_links)
