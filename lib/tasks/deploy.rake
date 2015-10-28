@@ -4,7 +4,7 @@ require 'colored'
 
 include Trunk::Tutum::Deploy
 
-namespace :tutum do
+namespace :tutum_deploy do
 
   raise 'Failure: Make sure you specified TUTUM_USERNAME and TUTUM_API_KEY'.red if ENV["TUTUM_USERNAME"].nil? || ENV["TUTUM_API_KEY"].nil?
   @tutum_api = Tutum.new(:username => "#{ENV['TUTUM_USERNAME']}", :api_key => "#{ENV['TUTUM_API_KEY']}")
