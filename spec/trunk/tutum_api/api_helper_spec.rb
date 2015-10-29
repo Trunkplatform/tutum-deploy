@@ -61,26 +61,26 @@ describe Trunk::TutumApi::ApiHelper  do
     it 'non http ping path should build a url' do
       # given
       service = {:public_dns=>"hello.com"}
-      ping_path = "ping"
+      ping_path = ":80/ping"
 
       # when
       ping_url = api_helper.ping_url(service, ping_path)
 
       # then
-      expect(ping_url).to eq("http://hello.com/ping")
+      expect(ping_url).to eq("http://hello.com:80/ping")
     end
 
     it 'proxy_path should be appended when exists' do
       # given
       service = {:public_dns=>"hello.world.trunkbot.svc.tutum.io"}
-      ping_path = "admin/ping"
+      ping_path = ":80/admin/ping"
       proxy_path = "https://proxy-dev.trunkplatform.com.au/proxy/"
 
       # when
       ping_url = api_helper.ping_url(service, ping_path, proxy_path)
 
       # then
-      expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.world/admin/ping")
+      expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.world:80/admin/ping")
     end
 
   end

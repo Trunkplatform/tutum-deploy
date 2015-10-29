@@ -12,7 +12,7 @@ module Trunk
         attr_reader :tutum_api, :service_name, :ping_path, :proxy_path
         attr_accessor :to_deploy, :to_shutdown
 
-        def initialize(tutum_api, service_name, version, ping_path='/', sleep_interval = 5, max_timeout = 60, overlay_proxy='')
+        def initialize(tutum_api, service_name, version, ping_path='/', sleep_interval = 5, max_timeout = 60, overlay_proxy=nil)
           @tutum_api = tutum_api
           @service_name = service_name
           @version = version

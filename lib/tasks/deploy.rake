@@ -6,20 +6,21 @@ include Trunk::TutumApi::Deploy
 
 namespace :tutum_deploy do
 
-
   @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
 
   def sleep_interval
-    @sleep_interval = ENV['SLEEP_INTERVAL'].to_i || 5
+    @sleep_interval = ENV['SLEEP_INTERVAL'] || 5
+    @sleep_interval.to_i
   end
 
   def max_timeout
-    @max_timeout =  ENV['MAX_TIMEOUT'].to_i || 120
+    @max_timeout = ENV['MAX_TIMEOUT'] || 120
+    @max_timeout.to_i
   end
 
   def proxy_path
-    @proxy_path = ENV['PROXY_PATH'] || ''
+    @proxy_path = ENV['PROXY_PATH'] || 'wtf'
   end
 
   def tutum_api
@@ -28,13 +29,11 @@ namespace :tutum_deploy do
   end
 
   desc 'Deploy Single Stack Service'
-  task :single_stack_deploy, [:service_name, :version, :ping_path] do |_, args|
-
+  task :single_stack_deploy, [:service_name, :version, :ping_path, :ping_port] do |_, args|
     service_name = args[:service_name]
     version = args[:version]
-    ping_path = args[:ping_path]
+    ping_path = ":#{args[:ping_port] || '80'}/#{args[:ping_uri] || 'ping'}"
 
-    @logger.info "proxy_path: #{proxy_path}"
     begin
       @deployment = Deployment.new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, proxy_path)
                         .get_candidates.single_stack_deploy {|deployed|
@@ -47,15 +46,15 @@ namespace :tutum_deploy do
   end
 
   desc 'Deploy Dual Stack Service with zero downtime'
-  task :dual_stack_deploy, [:service_name, :version, :router_name, :ping_path] do |_, args|
+  task :dual_stack_deploy, [:service_name, :version, :router_name, :ping_uri, :ping_port] do |_, args|
     service_name = args[:service_name]
     version = args[:version]
     router_name = args[:router_name]
-    ping_path = args[:ping_path]
+    ping_path = ":#{args[:ping_port] || '80'}/#{args[:ping_uri] || 'ping'}"
 
     begin
       @deployment = Trunk::TutumApi::Deploy::Deployment
-                        .new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout)
+                        .new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, proxy_path)
                         .get_candidates.dual_stack_deploy router_name
     rescue Exception => ex
       @logger.error ex.backtrace
