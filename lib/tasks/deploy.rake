@@ -20,7 +20,7 @@ namespace :tutum do
   end
 
   def proxy_path
-    @proxy_path = ENV['PROXY_PATH'] || 'wtf'
+    @proxy_path = ENV['PROXY_PATH']
   end
 
   def tutum_api
