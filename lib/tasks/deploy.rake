@@ -1,4 +1,4 @@
-require 'trunk/tutum/deploy'
+require 'trunk/tutum_api/deploy'
 require 'logger'
 require 'colored'
 
