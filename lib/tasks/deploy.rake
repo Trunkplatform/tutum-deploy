@@ -8,7 +8,7 @@ namespace :tutum_deploy do
 
   sleep_interval = ENV['SLEEP_INTERVAL'] || 5
   max_timeout =  ENV['MAX_TIMEOUT'] || 60
-  overlay_proxy = ENV['OVERLAY_PROXY'] || ''
+  proxy_path = ENV['PROXY_PATH'] || ''
 
       @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
@@ -27,7 +27,7 @@ namespace :tutum_deploy do
 
 
     begin
-      @deployment = Deployment.new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, overlay_proxy)
+      @deployment = Deployment.new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, proxy_path)
                         .get_candidates.single_stack_deploy {|deployed|
         @logger.info("#{deployed[:public_dns]} deployed successfully")
       }

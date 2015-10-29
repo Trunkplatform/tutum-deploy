@@ -61,23 +61,23 @@ describe Trunk::TutumApi::ApiHelper  do
     it 'non http ping path should build a url' do
       # given
       service = {:public_dns=>"hello.com"}
-      ping_path = ":8080/world"
+      ping_path = "ping"
 
       # when
       ping_url = api_helper.ping_url(service, ping_path)
 
       # then
-      expect(ping_url).to eq("http://hello.com:8080/world")
+      expect(ping_url).to eq("http://hello.com/ping")
     end
 
-    it 'overlay_proxy should be appended when exists' do
+    it 'proxy_path should be appended when exists' do
       # given
       service = {:public_dns=>"hello.com"}
-      ping_path = "/admin/ping"
-      overlay_proxy = "https://proxy-dev.trunkplatform.com.au"
+      ping_path = "admin/ping"
+      proxy_path = "https://proxy-dev.trunkplatform.com.au/proxy/"
 
       # when
-      ping_url = api_helper.ping_url(service, ping_path, overlay_proxy)
+      ping_url = api_helper.ping_url(service, ping_path, proxy_path)
 
       # then
       expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.com/admin/ping")

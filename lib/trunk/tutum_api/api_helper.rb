@@ -22,9 +22,9 @@ module Trunk
         return ping_path if ping_path.include? "http"
 
         if overlay_proxy.nil? || overlay_proxy.empty?
-          "http://#{service[:public_dns]}#{ping_path}"
+          "http://#{service[:public_dns].chomp('/')}/#{ping_path}"
         else
-          "#{overlay_proxy}/proxy/#{service[:public_dns]}#{ping_path}"
+          "#{overlay_proxy.chomp('/')}/#{service[:public_dns].chomp('/')}/#{ping_path}"
         end
       end
 
