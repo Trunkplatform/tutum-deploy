@@ -11,11 +11,11 @@ namespace :tutum_deploy do
   @logger.progname = 'Tutum Deployment'
 
   def sleep_interval
-    @sleep_interval = ENV['SLEEP_INTERVAL'] || 5
+    @sleep_interval = ENV['SLEEP_INTERVAL'].to_i || 5
   end
 
   def max_timeout
-    @max_timeout =  ENV['MAX_TIMEOUT'] || 120
+    @max_timeout =  ENV['MAX_TIMEOUT'].to_i || 120
   end
 
   def proxy_path
