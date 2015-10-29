@@ -7,7 +7,7 @@ include Trunk::TutumApi::Deploy
 namespace :tutum_deploy do
 
   sleep_interval = ENV['SLEEP_INTERVAL'] || 5
-  max_timeout =  ENV['MAX_TIMEOUT'] || 60
+  max_timeout =  ENV['MAX_TIMEOUT'] || 120
   proxy_path = ENV['PROXY_PATH'] || ''
 
       @logger = Logger.new(STDOUT)

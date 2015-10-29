@@ -72,7 +72,7 @@ describe Trunk::TutumApi::ApiHelper  do
 
     it 'proxy_path should be appended when exists' do
       # given
-      service = {:public_dns=>"hello.com"}
+      service = {:public_dns=>"hello.world.trunkbot.svc.tutum.io"}
       ping_path = "admin/ping"
       proxy_path = "https://proxy-dev.trunkplatform.com.au/proxy/"
 
@@ -80,7 +80,7 @@ describe Trunk::TutumApi::ApiHelper  do
       ping_url = api_helper.ping_url(service, ping_path, proxy_path)
 
       # then
-      expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.com/admin/ping")
+      expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.world/admin/ping")
     end
 
   end

@@ -24,7 +24,7 @@ module Trunk
         if overlay_proxy.nil? || overlay_proxy.empty?
           "http://#{service[:public_dns].chomp('/')}/#{ping_path}"
         else
-          "#{overlay_proxy.chomp('/')}/#{service[:public_dns].chomp('/')}/#{ping_path}"
+          "#{overlay_proxy.chomp('/')}/#{service[:public_dns].chomp('/').chomp(".trunkbot.svc.tutum.io")}/#{ping_path}"
         end
       end
 

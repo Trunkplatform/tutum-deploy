@@ -9,7 +9,7 @@ module Trunk
       class Deployment
         include Trunk::TutumApi::ApiHelper
 
-        attr_reader :tutum_api, :service_name, :ping_path, :overlay_proxy
+        attr_reader :tutum_api, :service_name, :ping_path, :proxy_path
         attr_accessor :to_deploy, :to_shutdown
 
         def initialize(tutum_api, service_name, version, ping_path='/', sleep_interval = 5, max_timeout = 60, overlay_proxy='')
@@ -21,7 +21,7 @@ module Trunk
           @sleep_interval = sleep_interval
           @max_timeout = max_timeout
 
-          @overlay_proxy = overlay_proxy
+          @proxy_path = overlay_proxy
 
           @logger = Logger.new(STDOUT)
           @logger.progname = "Tutum Deployment"
@@ -54,7 +54,7 @@ module Trunk
           completed?(response[:action_uri]) { |action_state|
             @logger.info "Deployment status: #{action_state})"
             if action_state == "Success"
-              healthy? (ping_url(@to_deploy, @ping_path, @overlay_proxy)) {
+              healthy? (ping_url(@to_deploy, @ping_path, @proxy_path)) {
                 @logger.info "#{@to_deploy[:public_dns]} running healthy"
                 block.call @tutum_api.services.get(@to_deploy[:uuid])
               }
