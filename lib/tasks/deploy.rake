@@ -4,7 +4,7 @@ require 'colored'
 
 include Trunk::TutumApi::Deploy
 
-namespace :tutum_deploy do
+namespace :tutum do
 
   @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
