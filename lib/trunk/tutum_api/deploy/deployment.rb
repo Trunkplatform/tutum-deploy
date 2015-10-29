@@ -54,7 +54,7 @@ module Trunk
           completed?(response[:action_uri]) { |action_state|
             @logger.info "Deployment status: #{action_state})"
             if action_state == "Success"
-              healthy? (ping_url(@to_deploy, @ping_path)) {
+              healthy? (ping_url(@to_deploy, @ping_path, @overlay_proxy)) {
                 @logger.info "#{@to_deploy[:public_dns]} running healthy"
                 block.call @tutum_api.services.get(@to_deploy[:uuid])
               }

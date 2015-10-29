@@ -18,10 +18,14 @@ module Trunk
         @tutum_api.services.get(services[0][:uuid])
       end
 
-      def ping_url(service, ping_path, overlay_proxy = '')
+      def ping_url(service, ping_path, overlay_proxy = nil)
         return ping_path if ping_path.include? "http"
 
-        "http://#{service[:public_dns]}#{ping_path}"
+        if overlay_proxy.nil? || overlay_proxy.empty?
+          "http://#{service[:public_dns]}#{ping_path}"
+        else
+          "#{overlay_proxy}/proxy/#{service[:public_dns]}#{ping_path}"
+        end
       end
 
       def ping(ping_url)

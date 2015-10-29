@@ -70,6 +70,19 @@ describe Trunk::TutumApi::ApiHelper  do
       expect(ping_url).to eq("http://hello.com:8080/world")
     end
 
+    it 'overlay_proxy should be appended when exists' do
+      # given
+      service = {:public_dns=>"hello.com"}
+      ping_path = "/admin/ping"
+      overlay_proxy = "https://proxy-dev.trunkplatform.com.au"
+
+      # when
+      ping_url = api_helper.ping_url(service, ping_path, overlay_proxy)
+
+      # then
+      expect(ping_url).to eq("https://proxy-dev.trunkplatform.com.au/proxy/hello.com/admin/ping")
+    end
+
   end
 
   describe 'Action API' do
