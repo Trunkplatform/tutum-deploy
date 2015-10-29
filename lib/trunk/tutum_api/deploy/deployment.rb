@@ -25,6 +25,9 @@ module Trunk
 
           @logger = Logger.new(STDOUT)
           @logger.progname = "Tutum Deployment"
+
+          @logger.info "new deployment for #{service_name}:#{version}, time out #{@sleep_interval}/#{@max_timeout}"
+          @logger.info "ping_path at #{ping_path} using proxy: #{overlay_proxy}"
         end
 
         def get_candidates()

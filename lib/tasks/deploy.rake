@@ -6,12 +6,21 @@ include Trunk::TutumApi::Deploy
 
 namespace :tutum_deploy do
 
-  sleep_interval = ENV['SLEEP_INTERVAL'] || 5
-  max_timeout =  ENV['MAX_TIMEOUT'] || 120
-  proxy_path = ENV['PROXY_PATH'] || ''
 
-      @logger = Logger.new(STDOUT)
+  @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
+
+  def sleep_interval
+    @sleep_interval = ENV['SLEEP_INTERVAL'] || 5
+  end
+
+  def max_timeout
+    @max_timeout =  ENV['MAX_TIMEOUT'] || 120
+  end
+
+  def proxy_path
+    @proxy_path = ENV['PROXY_PATH'] || ''
+  end
 
   def tutum_api
     raise 'Failure: Make sure you specified TUTUM_USERNAME and TUTUM_API_KEY'.red if ENV["TUTUM_USERNAME"].nil? || ENV["TUTUM_API_KEY"].nil?
@@ -25,7 +34,7 @@ namespace :tutum_deploy do
     version = args[:version]
     ping_path = args[:ping_path]
 
-
+    @logger.info "proxy_path: #{proxy_path}"
     begin
       @deployment = Deployment.new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, proxy_path)
                         .get_candidates.single_stack_deploy {|deployed|
