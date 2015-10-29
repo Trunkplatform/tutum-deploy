@@ -21,8 +21,8 @@ Or install it yourself as:
 ### Configuration
 The following environment variables needs to be provided:
 
-    TUTUM_USERNAME
-    TUTUM_API_KEY
+    TUTUM_USER
+    TUTUM_APIKEY
     PROXY_PATH (Optional)
     SLEEP_INTERVAL (Optional interval between polling, defaults to 5 seconds)
     MAX_TIMEOUT (Optional maximum timeout when waiting for actions, defaults to 120 seconds)
