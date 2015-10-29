@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'trunk/tutum/deploy/version'
+require_relative 'lib/trunk/tutum_api/deploy/version'
 
 Gem::Specification.new do |s|
   s.name          = "tutum-deploy"
-  s.version       = Trunk::Tutum::Deploy::VERSION
+  s.version       = Trunk::TutumApi::Deploy::VERSION
   s.authors       = ["Yun Zhi Lin"]
   s.email         = ["yun@yunspace.com"]
   s.summary       = "A gem for Tutum zero downtime deployments using Stacks"

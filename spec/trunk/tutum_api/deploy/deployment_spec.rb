@@ -1,13 +1,13 @@
 require 'rspec'
 require 'webmock/rspec'
 require 'json'
-require 'trunk/tutum/deploy/deployment'
-require 'trunk/tutum/test_fixtures'
+require 'trunk/tutum_api/deploy/deployment'
+require 'trunk/tutum_api/test_fixtures'
 
-describe Trunk::Tutum::Deploy::Deployment do
+describe Trunk::TutumApi::Deploy::Deployment do
   include TestFixtures
 
-  subject(:deployment) { Trunk::Tutum::Deploy::Deployment.new(TestFixtures::TUTUM_API, "web-sandbox", "v2", "ping") }
+  subject(:deployment) { Trunk::TutumApi::Deploy::Deployment.new(TestFixtures::TUTUM_API, "web-sandbox", "v2", "ping") }
 
   describe 'When deploying a service' do
 

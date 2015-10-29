@@ -1,5 +1,6 @@
 require 'json'
-require 'trunk/tutum/api_helper'
+require 'rspec'
+require_relative "../../../lib/trunk/tutum_api/api_helper"
 
 module TestFixtures
 
@@ -71,7 +72,7 @@ module TestFixtures
   }
 
   class ApiHelperStub
-    include Trunk::Tutum::ApiHelper
+    include Trunk::TutumApi::ApiHelper
 
     attr_reader :tutum_api
     def initialize(session, service_name="web-sandbox", version="1", ping_path="/", sleep_interval = 1, max_timeout = 2)

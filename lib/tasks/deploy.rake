@@ -2,7 +2,7 @@ require 'trunk/tutum/deploy'
 require 'logger'
 require 'colored'
 
-include Trunk::Tutum::Deploy
+include Trunk::TutumApi::Deploy
 
 namespace :tutum_deploy do
 
@@ -43,7 +43,7 @@ namespace :tutum_deploy do
     ping_path = args[:ping_path]
 
     begin
-      @deployment = Trunk::Tutum::Deploy::Deployment
+      @deployment = Trunk::TutumApi::Deploy::Deployment
                         .new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout)
                         .get_candidates.dual_stack_deploy router_name
     rescue Exception => ex

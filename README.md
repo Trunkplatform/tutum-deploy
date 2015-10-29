@@ -1,4 +1,4 @@
-# Trunk::Tutum::Deploy
+# Trunk::TutumApi::Deploy
 
 TODO: Write a gem description
 

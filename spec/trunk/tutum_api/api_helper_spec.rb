@@ -1,10 +1,10 @@
 require 'rspec'
 require 'webmock/rspec'
 require 'json'
-require 'trunk/tutum/api_helper'
-require 'trunk/tutum/test_fixtures'
+require 'trunk/tutum_api/api_helper'
+require 'trunk/tutum_api/test_fixtures'
 
-describe Trunk::Tutum::ApiHelper  do
+describe Trunk::TutumApi::ApiHelper  do
   include TestFixtures
 
   subject(:api_helper) { TestFixtures::ApiHelperStub.new(TestFixtures::TUTUM_API) }
