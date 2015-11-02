@@ -71,7 +71,7 @@ module Trunk
           raise "nothing to deploy" if @to_deploy.nil?
 
           single_stack_deploy { |deployed|
-            router_switch(router_name, deployed) {
+            router_switch(router_name, deployed) {|_|
               @logger.info("router switched #{deployed[:public_dns]}, shutting down #{to_shutdown[:public_dns]}")
               if @to_shutdown
                 response = @tutum_api.services.stop(@to_shutdown[:uuid])
@@ -115,7 +115,7 @@ module Trunk
           response = @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
           completed?(response[:action_uri]) { |action_state|
             if action_state == "Success"
-              return block.call
+              return block.call linked_services
             else
               raise("failed to switch router")
             end

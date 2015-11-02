@@ -134,12 +134,10 @@ describe Trunk::TutumApi::Deploy::Deployment do
 
 
       # when
-      response = deployment.router_switch("router-sandbox", TestFixtures::SERVICE_RUNNING){||
-
+      deployment.router_switch("router-sandbox", TestFixtures::SERVICE_RUNNING){|linked_services|
+        # then
+        expect(linked_services).to eq(updated_links[:linked_to_service])
       }
-
-      # then
-      expect(response[:body]).to eq(updated_links)
     end
 
     it 'should not switch router to stopped service' do
