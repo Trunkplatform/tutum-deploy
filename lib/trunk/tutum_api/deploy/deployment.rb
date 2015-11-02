@@ -30,18 +30,27 @@ module Trunk
           @logger.info "ping_path at #{ping_path} using proxy: #{overlay_proxy}"
         end
 
-        def get_candidates()
+        def get_candidates(router_name = nil)
           services = services(@service_name)
 
           if services.length == 1
             @to_deploy ||= services[0]
           else
-            services.each { |service|
-              service_state = service[:state]
-              if service_state == "Stopped" || service_state == 'Not running'
-                @to_deploy ||= service
-              elsif service_state == "Running"
-                @to_shutdown ||= service
+            # get linked services of router
+            router_service = service(router_name)
+            linked_services = router_service[:linked_to_service]
+
+            # loop through services to find one that the router points to
+            linked_services.each { |linked_service|
+              if linked_service[:name] == @service_name
+                services.each { |service|
+                  if linked_service[:to_service].include? service[:uuid]
+                    @to_shutdown = service
+                  else
+                    @to_deploy = service
+                  end
+                }
+                break
               end
             }
           end

@@ -55,7 +55,7 @@ namespace :tutum do
     begin
       @deployment = Trunk::TutumApi::Deploy::Deployment
                         .new(tutum_api, service_name, version, ping_path, sleep_interval, max_timeout, proxy_path)
-                        .get_candidates.dual_stack_deploy router_name
+                        .get_candidates(router_name).dual_stack_deploy router_name
     rescue Exception => ex
       @logger.error ex.backtrace
       abort ex.message.red

@@ -7,7 +7,7 @@ module TestFixtures
   TUTUM_API_URL = "https://dashboard.tutum.co/api/v1"
   TUTUM_API = Tutum.new(:username => "tutum_alice", :api_key => "DEADBEEFKEY")
 
-  SERVICE_RUNNING = {
+  SERVICE_BLUE = {
       :uuid => "blue-uuid",
       :image_name => "trunk/web-sandbox:v1",
       :name => "web-sandbox",
@@ -16,7 +16,7 @@ module TestFixtures
       :state => "Running",
       :public_dns => "web-sandbox.blue-stack.trunkbot.svc.tutum.io"
   }
-  SERVICE_STOPPED = {
+  SERVICE_GREEN = {
       :uuid => "green-uuid",
       :image_name => "trunk/web-sandbox:v1",
       :name => "web-sandbox",
@@ -27,9 +27,15 @@ module TestFixtures
   }
   SERVICES = {
       :meta => {},
-      :objects => [SERVICE_RUNNING, SERVICE_STOPPED]
+      :objects => [SERVICE_BLUE, SERVICE_GREEN]
   }
   SERVICES_JSON = JSON.generate(SERVICES)
+
+  SERVICE = {
+      :meta => {},
+      :objects => [SERVICE_BLUE]
+  }
+  SERVICE_JSON = JSON.generate(SERVICE)
 
   ROUTER = {
       :uuid => "router-uuid",
@@ -41,7 +47,7 @@ module TestFixtures
           {
               :from_service => "/api/v1/service/router-uuid/",
               :name => "web-sandbox",
-              :to_service => "/api/v1/service/green-uuid/"
+              :to_service => "/api/v1/service/blue-uuid/"
           },
           {
               :from_service => "/api/v1/service/router-uuid/",
