@@ -15,7 +15,7 @@ namespace :tutum do
   end
 
   def max_timeout
-    @max_timeout = ENV['MAX_TIMEOUT'] || 120
+    @max_timeout = ENV['MAX_TIMEOUT'] || 300
     @max_timeout.to_i
   end
 
