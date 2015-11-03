@@ -23,6 +23,7 @@ module Trunk
 
           @proxy_path = overlay_proxy
 
+          STDOUT.sync = true
           @logger = Logger.new(STDOUT)
           @logger.progname = "Tutum Deployment"
 

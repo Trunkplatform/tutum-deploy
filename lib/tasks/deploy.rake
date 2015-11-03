@@ -6,6 +6,7 @@ include Trunk::TutumApi::Deploy
 
 namespace :tutum do
 
+  STDOUT.sync = true
   @logger = Logger.new(STDOUT)
   @logger.progname = 'Tutum Deployment'
 
