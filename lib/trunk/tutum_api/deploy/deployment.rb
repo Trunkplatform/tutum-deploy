@@ -12,6 +12,11 @@ module Trunk
         attr_reader :tutum_api, :service_name, :ping_path, :proxy_path
         attr_accessor :to_deploy, :to_shutdown
 
+        def parse_service_alias(linked_service_name)
+          tokens = linked_service_name.split('-')
+          return tokens.pop, tokens.join('-')
+        end
+
         def initialize(tutum_api, service_name, version, ping_path='/', sleep_interval = 5, max_timeout = 60, overlay_proxy=nil)
           @tutum_api = tutum_api
           @service_name = service_name
@@ -43,7 +48,8 @@ module Trunk
 
             # loop through services to find one that the router points to
             linked_services.each { |linked_service|
-              if linked_service[:name] == @service_name
+              linked_service_color, linked_service_name = parse_service_alias(linked_service[:name])
+              if linked_service_name == @service_name
                 services.each { |service|
                   if linked_service[:to_service].include? service[:uuid]
                     @to_shutdown = service
@@ -118,7 +124,10 @@ module Trunk
 
           deployed_uri = deployed[:resource_uri]
           linked_services.each { |linked_service|
-            linked_service[:to_service] = deployed_uri if linked_service[:name] == deployed_name
+            linked_service_color, linked_service_name = parse_service_alias(linked_service[:name])
+            deployed_color = linked_service_color == 'blue' ? 'green' : 'blue'
+            linked_service[:to_service] = deployed_uri if linked_service_name == deployed_name
+            linked_service[:name] = "#{deployed_name}-#{deployed_color}"
           }
 
           @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
