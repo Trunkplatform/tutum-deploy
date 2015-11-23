@@ -126,8 +126,10 @@ module Trunk
           linked_services.each { |linked_service|
             linked_service_color, linked_service_name = parse_service_alias(linked_service[:name])
             deployed_color = linked_service_color == 'blue' ? 'green' : 'blue'
-            linked_service[:to_service] = deployed_uri if linked_service_name == deployed_name
-            linked_service[:name] = "#{deployed_name}-#{deployed_color}"
+            if linked_service_name == deployed_name
+              linked_service[:to_service] = deployed_uri
+              linked_service[:name] = "#{deployed_name}-#{deployed_color}"
+            end
           }
 
           @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
