@@ -30,7 +30,7 @@ namespace :tutum do
   end
 
   desc 'Deploy Single Stack Service'
-  task :single_stack_deploy, [:service_name, :version, :ping_path, :ping_port] do |_, args|
+  task :single_stack_deploy, [:service_name, :version, :ping_uri, :ping_port] do |_, args|
     service_name = args[:service_name]
     version = args[:version]
     ping_path = ":#{args[:ping_port] || '80'}/#{args[:ping_uri] || 'ping'}"
