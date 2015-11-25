@@ -77,12 +77,12 @@ describe Trunk::TutumApi::Deploy::Deployment do
           :linked_to_service => [
           {
               :from_service => "/api/v1/service/router-uuid/",
-              :name => "web-sandbox",
+              :name => "web-sandbox-green",
               :to_service => "/api/v1/service/green-uuid/"
           },
           {
               :from_service => "/api/v1/service/router-uuid/",
-              :name => "irrelevant",
+              :name => "irrelevant-blue",
               :to_service => "/api/v1/service/irrelevant_linked_service/"
           }]
       }

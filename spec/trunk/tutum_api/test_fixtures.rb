@@ -46,12 +46,12 @@ module TestFixtures
       :linked_to_service => [
           {
               :from_service => "/api/v1/service/router-uuid/",
-              :name => "web-sandbox",
+              :name => "web-sandbox-blue",
               :to_service => "/api/v1/service/blue-uuid/"
           },
           {
               :from_service => "/api/v1/service/router-uuid/",
-              :name => "irrelevant",
+              :name => "irrelevant-blue",
               :to_service => "/api/v1/service/irrelevant_linked_service/"
           }
       ],
