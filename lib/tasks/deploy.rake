@@ -73,4 +73,19 @@ namespace :tutum do
     end
   end
 
+  desc 'Service router relink'
+  task :relink_router, [:router_name, :service_uuid] do |_, args|
+    begin
+      @deployment = Deployment.new(tutum_api, nil, nil)
+      service_to_switch = @deployment.tutum_api.services.get(args[:service_uuid])
+      @deployment.router_switch(args[:router_name], service_to_switch) {|switched_service|
+        @logger.info("successfully switched #{router_name} to service: #{switched_service[:public_dns]}")
+      }
+    rescue Exception => ex
+      @logger.error ex.backtace
+      abort ex.message.red
+    end
+
+  end
+
 end
