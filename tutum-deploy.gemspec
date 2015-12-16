@@ -28,4 +28,5 @@ Gem::Specification.new do |s|
   s.add_dependency('tutum', '~> 0.2')
   s.add_dependency("rake", '~>10.4')
   s.add_dependency('colored', '~> 1.2')
+  s.add_dependency('rest-client', '~> 1.8.0')
 end

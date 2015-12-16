@@ -5,6 +5,7 @@ require_relative "../../../lib/trunk/tutum_api/api_helper"
 module TestFixtures
 
   TUTUM_API_URL = "https://dashboard.tutum.co/api/v1"
+  ROUTER_DNS = "router.stack.trunkbot.svc.tutum.io"
   TUTUM_API = Tutum.new(:username => "tutum_alice", :api_key => "DEADBEEFKEY")
 
   SERVICE_BLUE = {

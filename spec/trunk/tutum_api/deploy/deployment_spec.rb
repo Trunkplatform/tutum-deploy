@@ -100,10 +100,27 @@ describe Trunk::TutumApi::Deploy::Deployment do
       # when
       service_green = TestFixtures::SERVICE_GREEN;
       service_green[:state] = "Running"
-      deployment.router_switch("router-sandbox", service_green){|linked_services|
+      deployment.router_switch("router-sandbox", service_green){|router_service|
         # then
-        expect(linked_services).to eq(updated_links[:linked_to_service])
+        expect(router_service[:linked_to_service]).to eq(updated_links[:linked_to_service])
       }
+    end
+
+    it 'should reload HAProxy' do
+      #given
+      router_service = {
+          :public_dns => TestFixtures::ROUTER_DNS
+      }
+
+      stub_request(:get, "http://#{TestFixtures::ROUTER_DNS}:5000/main/reload")
+          .to_return(:status => 200, :body => "initiated User reload")
+
+      #when
+      response = deployment.router_reload(router_service)
+
+      #then
+      expect(response.code) == 200
+
     end
 
     it 'should not switch router to stopped service' do

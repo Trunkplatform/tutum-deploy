@@ -2,6 +2,7 @@ require 'logger'
 require 'tutum'
 require 'trunk/tutum_api/api_helper'
 require 'colored'
+require 'rest-client'
 
 module Trunk
   module TutumApi
@@ -87,7 +88,10 @@ module Trunk
           raise "nothing to deploy" if @to_deploy.nil?
 
           single_stack_deploy { |deployed|
-            router_switch(router_name, deployed) {|_|
+            router_switch(router_name, deployed) {|router_service|
+
+              router_reload(router_service)
+
               @logger.info("router switched #{deployed[:public_dns]}, shutting down #{to_shutdown[:public_dns]}")
               if @to_shutdown
                 response = @tutum_api.services.stop(@to_shutdown[:uuid])
@@ -101,10 +105,6 @@ module Trunk
           }
         end
 
-        def dynamic_stack_deploy
-
-        end
-
         def deploy
           deploy_image = @to_deploy[:image_name].gsub(/:(.*)/, ":#{@version}")
 
@@ -113,6 +113,19 @@ module Trunk
 
           @logger.info "redeploying [#{@to_deploy[:public_dns]}]"
           @tutum_api.services.redeploy(@to_deploy[:uuid])
+        end
+
+        def router_reload(router_service)
+          @logger.info("sleeping for #{@sleep_interval} and then reloading HAProxy")
+          sleep @sleep_interval
+          reload_url = "http://#{router_service[:public_dns]}:5000/main/reload"
+          response = RestClient.get(reload_url)
+          if response.code == 200
+            @logger.info("HAProxy API response: " + response.body)
+          else
+            @logger.warn("Failed HAProxy reload via API, error code: #{response.code}")
+          end
+          response
         end
 
         def router_switch(router_name, deployed, &block)
@@ -136,7 +149,7 @@ module Trunk
           response = @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
           completed?(response[:action_uri]) { |action_state|
             if action_state == "Success"
-              return block.call linked_services
+              return block.call router_service
             else
               raise("failed to switch router")
             end

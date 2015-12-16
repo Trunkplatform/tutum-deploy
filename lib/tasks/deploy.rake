@@ -81,8 +81,8 @@ namespace :tutum do
     begin
       @deployment = Deployment.new(tutum_api, nil, nil)
       service_to_switch = @deployment.tutum_api.services.get(service_uuid)
-      @deployment.router_switch(router_name, service_to_switch) {|linked_services|
-        @logger.info("#{router_name} to links: #{linked_services}")
+      @deployment.router_switch(router_name, service_to_switch) {|router_service|
+        @logger.info("#{router_name} to links: #{router_service[:linked_to_service]}")
       }
     rescue Exception => ex
       @logger.error ex.backtace
