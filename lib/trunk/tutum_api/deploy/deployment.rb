@@ -119,13 +119,18 @@ module Trunk
           @logger.info("sleeping for #{@sleep_interval} and then reloading HAProxy")
           sleep @sleep_interval
           reload_url = "http://#{router_service[:public_dns]}:5000/main/reload"
-          response = RestClient.get(reload_url)
-          if response.code == 200
-            @logger.info("HAProxy API response: " + response.body)
-          else
-            @logger.warn("Failed HAProxy reload via API, error code: #{response.code}")
+
+          begin
+            response = RestClient.get(reload_url)
+            if response.code == 200
+              @logger.info("HAProxy API response: " + response.body)
+            else
+              @logger.warn("Failed HAProxy reload via API, error code: #{response.code}")
+            end
+            return response
+          rescue Exception => ex
+            @logger.error ex.backtrace
           end
-          response
         end
 
         def router_switch(router_name, deployed, &block)
