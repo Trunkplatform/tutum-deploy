@@ -71,6 +71,9 @@ module Trunk
         def single_stack_deploy (&block)
           @logger.info("deploying: #{@to_deploy[:public_dns]} with version #{@version}")
           response = deploy
+          if response[:action_uri].nil?
+            @logger.warn("Response from tutum was: #{response.inspect}")
+          end
           completed?(response[:action_uri]) { |action_state|
             @logger.info "Deployment status: #{action_state})"
             if action_state == "Success"
