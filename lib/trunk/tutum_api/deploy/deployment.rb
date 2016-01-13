@@ -98,6 +98,9 @@ module Trunk
               @logger.info("router switched #{deployed[:public_dns]}, shutting down #{to_shutdown[:public_dns]}")
               if @to_shutdown
                 response = @tutum_api.services.stop(@to_shutdown[:uuid])
+                if response[:action_uri].nil?
+                  @logger.warn("Response from tutum was: #{response.inspect}")
+                end
                 completed? (response[:action_uri]) { |action_state|
                   if action_state == "Failed"
                     raise "failed to stop Service"
@@ -155,6 +158,9 @@ module Trunk
 
           @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
           response = @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
+          if response[:action_uri].nil?
+            @logger.warn("Response from tutum was: #{response.inspect}")
+          end
           completed?(response[:action_uri]) { |action_state|
             if action_state == "Success"
               return block.call router_service
