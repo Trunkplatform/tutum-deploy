@@ -6,6 +6,7 @@ class TutumApi
   def initialize(headers, json_opts = {:symbolize_names => true})
     @headers = headers
     @json_opts = json_opts
+    RestClient.log = Logger.new($stdout)
   end
 
   def http_get(path, params={})
