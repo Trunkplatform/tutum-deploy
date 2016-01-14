@@ -71,9 +71,6 @@ module Trunk
         def single_stack_deploy (&block)
           @logger.info("deploying: #{@to_deploy[:public_dns]} with version #{@version}")
           response = deploy
-          if response[:action_uri].nil?
-            @logger.warn("Response from tutum was: #{response.inspect}")
-          end
           completed?(response[:action_uri]) { |action_state|
             @logger.info "Deployment status: #{action_state})"
             if action_state == "Success"
@@ -158,9 +155,6 @@ module Trunk
 
           @logger.info("switching router #{router_name} to use #{deployed[:public_dns]}")
           response = @tutum_api.services.update(router_service[:uuid], :linked_to_service => linked_services)
-          if response[:action_uri].nil?
-            @logger.warn("Response from tutum was: #{response.inspect}")
-          end
           completed?(response[:action_uri]) { |action_state|
             if action_state == "Success"
               return block.call router_service
