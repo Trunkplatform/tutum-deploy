@@ -1,14 +1,14 @@
 require 'logger'
 require 'tutum'
-require 'trunk/tutum_api/api_helper'
+require 'trunk/dockercloud_api/api_helper'
 require 'colored'
 require 'rest-client'
 
 module Trunk
-  module TutumApi
+  module DockercloudApi
     module Deploy
       class Deployment
-        include Trunk::TutumApi::ApiHelper
+        include Trunk::DockercloudApi::ApiHelper
 
         attr_reader :tutum_api, :service_name, :ping_path, :proxy_path
         attr_accessor :to_deploy, :to_shutdown

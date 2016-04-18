@@ -1,10 +1,9 @@
 require 'logger'
-require 'tutum'
 require 'rest-client'
-require "tutum/tutum_api"
+# require "tutum/tutum_api"
 
 module Trunk
-  module TutumApi
+  module DockercloudApi
     module ApiHelper
       def services(service_name)
         services = @tutum_api.services.list({:name => service_name})[:objects]
