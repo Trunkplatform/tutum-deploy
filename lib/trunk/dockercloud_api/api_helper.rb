@@ -1,9 +1,8 @@
 require 'logger'
-require 'tutum'
 require 'rest-client'
 
 module Trunk
-  module TutumApi
+  module DockercloudApi
     module ApiHelper
       def services(service_name)
         services = @tutum_api.services.list({:name => service_name})[:objects]
@@ -23,7 +22,8 @@ module Trunk
         if overlay_proxy.nil? || overlay_proxy.empty?
           "http://#{service[:public_dns].chomp('/')}#{ping_path}"
         else
-          "#{overlay_proxy.chomp('/')}/#{service[:public_dns].chomp('/').chomp(".trunkbot.svc.tutum.io")}#{ping_path}"
+          service_name_for_ping = service[:public_dns].chomp('/').gsub(/.[a-f0-9]+.svc.dockerapp.io/, '')
+          "#{overlay_proxy.chomp('/')}/#{service_name_for_ping}#{ping_path}"
         end
       end
 

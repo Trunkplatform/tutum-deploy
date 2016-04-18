@@ -1,5 +1,6 @@
 require 'json'
 require 'rspec'
+require 'trunk/tutum_api/extensions/tutum_api'
 require_relative "../../../lib/trunk/tutum_api/api_helper"
 
 module TestFixtures

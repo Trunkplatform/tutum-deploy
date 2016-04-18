@@ -1,8 +1,5 @@
-require 'trunk/tutum_api/deploy'
 require 'logger'
 require 'colored'
-
-include Trunk::TutumApi::Deploy
 
 namespace :tutum do
 
@@ -31,6 +28,9 @@ namespace :tutum do
 
   desc 'Deploy Single Stack Service'
   task :single_stack_deploy, [:service_name, :version, :ping_uri, :ping_port] do |_, args|
+    require 'trunk/tutum_api/deploy'
+    include Trunk::TutumApi::Deploy
+
     service_name = args[:service_name]
     version = args[:version]
     ping_path = ":#{args[:ping_port] || '80'}/#{args[:ping_uri] || 'ping'}"
@@ -48,6 +48,9 @@ namespace :tutum do
 
   desc 'Deploy Dual Stack Service with zero downtime'
   task :dual_stack_deploy, [:service_name, :version, :router_name, :ping_uri, :ping_port] do |_, args|
+    require 'trunk/tutum_api/deploy'
+    include Trunk::TutumApi::Deploy
+
     service_name = args[:service_name]
     version = args[:version]
     router_name = args[:router_name]
@@ -65,6 +68,9 @@ namespace :tutum do
 
   desc 'Service level Health Check'
   task :ping_service, [:ping_url] do |_, args|
+    require 'trunk/tutum_api/deploy'
+    include Trunk::TutumApi::Deploy
+
     begin
       @deployment.ping(args[:ping_url])
     rescue Exception => ex
@@ -75,6 +81,9 @@ namespace :tutum do
 
   desc 'Service router relink'
   task :relink_router, [:router_name, :service_uuid] do |_, args|
+    require 'trunk/tutum_api/deploy'
+    include Trunk::TutumApi::Deploy
+
     router_name = args[:router_name]
     service_uuid = args[:service_uuid]
 

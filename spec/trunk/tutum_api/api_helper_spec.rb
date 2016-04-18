@@ -1,6 +1,7 @@
 require 'rspec'
 require 'webmock/rspec'
 require 'json'
+require 'trunk/tutum_api/deploy'
 require 'trunk/tutum_api/api_helper'
 require 'trunk/tutum_api/test_fixtures'
 
