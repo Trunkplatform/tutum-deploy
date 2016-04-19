@@ -22,8 +22,8 @@ namespace :dockercloud do
   end
 
   def tutum_api
-    raise 'Failure: Make sure you specified TUTUM_USER and TUTUM_APIKEY'.red if ENV["TUTUM_USER"].nil? || ENV["TUTUM_APIKEY"].nil?
-    @tutum_api ||= Tutum.new(:username => "#{ENV['TUTUM_USER']}", :api_key => "#{ENV['TUTUM_APIKEY']}")
+    raise 'Failure: Make sure you specified DOCKERCLOUD_USER and DOCKERCLOUD_APIKEY'.red if ENV['DOCKERCLOUD_USER'].nil? || ENV['DOCKERCLOUD_APIKEY'].nil?
+    @tutum_api ||= Tutum.new(:username => "#{ENV['DOCKERCLOUD_USER']}", :api_key => "#{ENV['DOCKERCLOUD_APIKEY']}")
   end
 
   desc 'Deploy Single Stack Service'
