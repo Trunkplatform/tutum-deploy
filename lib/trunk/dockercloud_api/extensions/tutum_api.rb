@@ -18,7 +18,7 @@ module Extensions
         end
 
         def url(path)
-          if path.include? 'action'
+          if path.include? '/action/'
             audit_url(path)
           else
             app_url(path)
