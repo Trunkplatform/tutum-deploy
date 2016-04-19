@@ -18,7 +18,7 @@ namespace :dockercloud do
   end
 
   def proxy_path
-    @proxy_path = ENV['PROXY_PATH']
+    @proxy_path = ENV['DOCKERCLOUD_PROXY_PATH']
   end
 
   def tutum_api
