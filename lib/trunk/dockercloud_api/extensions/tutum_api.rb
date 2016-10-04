@@ -10,7 +10,7 @@ module Extensions
         def initialize(headers, json_opts = {:symbolize_names => true})
           @headers = headers
           @json_opts = json_opts
-          RestClient.log = Logger.new($stdout)
+          RestClient.log = Logger.new("http.log")
         end
 
         def app_url(path)
